@@ -1,0 +1,7 @@
+# special hidden folders
+.DS_Store
+.vscode
+
+# build output dirs
+build
+build-*

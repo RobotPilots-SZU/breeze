@@ -1,0 +1,4 @@
+# Copyright (c) 2025 RobotPilots-SZU
+
+config BOARD_DAMIAO_MC02
+	select SOC_STM32H723XX

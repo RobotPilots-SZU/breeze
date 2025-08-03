@@ -1,0 +1,185 @@
+/*
+ * Copyright (c) 2025 RobotPilots
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <st/h7/stm32h723Xg.dtsi>
+#include <st/h7/stm32h723vgtx-pinctrl.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	model = "Shenzhen Damiao Tech. MC-02 board";
+	compatible = "damiao,mc02";
+
+	chosen {
+		zephyr,dtcm = &dtcm;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		user_button: button_0 {
+			label = "User";
+			gpios = <&gpioa 15 GPIO_ACTIVE_HIGH>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+	};
+
+	aliases {
+		sw0 = &user_button;
+		memsaccell = &bmi08x_accel;
+	};
+};
+
+&clk_lsi {
+	status = "okay";
+};
+
+&clk_hsi48 {
+	status = "okay";
+};
+
+&clk_hse {
+	clock-frequency = <DT_FREQ_M(24)>; /* On-board 24MHz RCC */
+	status = "okay";
+};
+
+&pll {
+	div-m = <12>;
+	mul-n = <275>;
+	div-p = <1>;    /* DIVP1: 550 MHz */
+	div-q = <2>;    /* DIVQ1: 275 MHz */
+	div-r = <2>;    /* DIVR1: 275 MHz */
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&pll2 {
+	div-m = <2>;
+	mul-n = <40>;
+	div-p = <4>;    /* DIVP2: 120 MHz */
+	div-q = <4>;    /* DIVQ2: 120 MHz */
+	div-r = <2>;    /* DIVR2: 240 MHz */
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(550)>;
+	d1cpre = <1>;   /* CPU : 550   MHz */
+	hpre = <2>;    	/* HCLK: 275   MHz */
+	d1ppre = <2>;  	/* APB1: 137.5 MHz */
+	d2ppre1 = <2>;	/* APB2: 137.5 MHz */
+	d2ppre2 = <2>; 	/* APB3: 137.5 MHz */
+	d3ppre = <2>;  	/* APB4: 137.5 MHz */
+};
+
+&backup_sram {
+	status = "okay";
+};
+
+&dma1 {
+	status = "okay";
+};
+
+&dma2 {
+	status = "okay";
+};
+
+&dmamux1 {
+	status = "okay";
+};
+
+&spi2 {
+	status = "okay";
+	clocks = <&rcc STM32_CLOCK(APB1, 14U)>,
+	         <&rcc STM32_SRC_PLL2_P SPI123_SEL(0)>;
+	pinctrl-0 = <&spi2_sck_pb13>,
+				<&spi2_miso_pc2_c>,
+				<&spi2_mosi_pc1>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioc 0 GPIO_ACTIVE_LOW>,
+			   <&gpioc 3 GPIO_ACTIVE_LOW>;
+	dmas = <&dmamux1 2 2 STM32_DMA_PERIPH_TX>,
+	       <&dmamux1 1 1 STM32_DMA_PERIPH_RX>;
+	dma-names = "tx", "rx";
+
+	bmi08x_accel: bmi08x@0 {
+		compatible = "bosch,bmi08x-accel";
+		reg = <0>;
+		int-gpios = <&gpioe 10 GPIO_ACTIVE_HIGH>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+		int1-map-io = <0x01>;
+		int2-map-io = <0x00>;
+		int1-conf-io = <0x04>;
+		int2-conf-io = <0x00>;
+		accel-hz = "800";
+		accel-fs = <24>;
+	};
+
+	bmi08x_gyro: bmi08x@1 {
+		compatible = "bosch,bmi08x-gyro";
+		reg = <1>;
+		int-gpios = <&gpioe 12 GPIO_ACTIVE_HIGH>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+		int3-4-map-io = <0x01>;
+		int3-4-conf-io = <0x02>;
+		gyro-hz = "1000_116";
+		gyro-fs = <1000>;
+	};
+};
+
+&uart5 {
+	status = "okay";
+	pinctrl-0 = <&uart5_tx_pc12>,
+				<&uart5_rx_pd2>;
+	pinctrl-names = "default";
+	current-speed = <100000>;
+	data-bits = <9>;
+	dmas = <&dmamux1 0 3 STM32_DMA_PERIPH_RX>;
+	dma-names = "rx";
+};
+
+&usart10 {
+	status = "okay";
+	pinctrl-0 = <&usart10_tx_pe3>,
+				<&usart10_rx_pe2>;
+	pinctrl-names = "default";
+	// current-speed = <115200>;	// Default is 115200
+};
+
+&fdcan1 {
+    status = "okay";
+    clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
+             <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(0)>;
+	bitrate = <1000000>;
+    bitrate-data = <5000000>;
+};
+
+&fdcan2 {
+    status = "okay";
+    clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
+             <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(0)>;
+             bitrate = <1000000>;
+    bitrate-data = <5000000>;
+};
+
+&fdcan3 {
+    status = "okay";
+    clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
+             <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(0)>;
+	bitrate = <1000000>;
+    bitrate-data = <5000000>;
+};
+
+&digi_die_temp {
+    status = "okay";
+};
+
+&nvic {
+	status = "disabled";
+};

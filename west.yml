@@ -1,0 +1,31 @@
+manifest:
+
+  defaults:
+    remote: robotpilots
+
+  remotes:
+    - name: robotpilots
+      url-base: https://github.com/RobotPilots-SZU
+    - name: upstream
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr
+      remote: upstream
+      revision: main
+      path: zephyr
+      import:
+        path-prefix: breeze-sdk
+        # By using name-allowlist we can clone only the modules that are
+        # strictly needed by the application.
+        name-allowlist:
+          - cmsis
+          - cmsis_6
+          - cmsis-nn
+          - cmsis-dsp
+          - segger
+          - hal_st
+          - hal_stm32
+
+  self:
+    path: breeze
