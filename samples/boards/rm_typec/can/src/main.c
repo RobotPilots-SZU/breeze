@@ -44,12 +44,21 @@ struct k_work state_change_work;          // 状态变化工作队列
 enum can_state current_state;             // 当前CAN状态
 struct can_bus_err_cnt current_err_cnt;   // 当前错误计数
 
-/**
- * @brief CAN发送中断回调函数
- * @param dev CAN设备指针
- * @param error 错误代码
- * @param arg 用户参数（发送者标识）
- */
+#define CAN_SEND_QUEUE_SIZE 8
+
+struct can_send_item {
+	const struct device *dev;
+	struct can_frame frame;
+};
+
+K_MSGQ_DEFINE(can_send_msgq, sizeof(struct can_send_item), CAN_SEND_QUEUE_SIZE, 4);
+
+// 发送线程
+#define CAN_SEND_THREAD_STACK_SIZE 512
+#define CAN_SEND_THREAD_PRIORITY 2
+K_THREAD_STACK_DEFINE(can_send_stack, CAN_SEND_THREAD_STACK_SIZE);
+struct k_thread can_send_thread_data;
+
 void tx_irq_callback(const struct device *dev, int error, void *arg)
 {
 	char *sender = (char *)arg;
@@ -58,6 +67,22 @@ void tx_irq_callback(const struct device *dev, int error, void *arg)
 
 	if (error != 0) {
 		LOG_ERR("TX callback error! Error code: %d, Sender: %s", error, sender);
+	}
+}
+
+void can_send_thread(void *p1, void *p2, void *p3)
+{
+	struct can_send_item item;
+	int ret;
+	while (1) {
+		k_msgq_get(&can_send_msgq, &item, K_FOREVER);
+		do {
+			ret = can_send(item.dev, &item.frame, K_FOREVER, tx_irq_callback, NULL);
+			if (ret != 0) {
+				LOG_WRN("CAN send failed, retrying... [%d]", ret);
+				k_sleep(K_MSEC(10));
+			}
+		} while (ret != 0);
 	}
 }
 
@@ -323,29 +348,54 @@ int main(void)
 
 	LOG_INF("Initialization complete. Starting CAN communication test...");
 
+	// 启动发送线程
+	k_tid_t send_tid = k_thread_create(&can_send_thread_data,
+		can_send_stack,
+		K_THREAD_STACK_SIZEOF(can_send_stack),
+		can_send_thread, NULL, NULL, NULL,
+		CAN_SEND_THREAD_PRIORITY, 0,
+		K_NO_WAIT);
+	if (!send_tid) {
+		LOG_ERR("Failed to create CAN send thread");
+	}
+
 	while (1) {
-		/* CAN1发送LED0开启消息 */
-		can1_frame.data[0] = 1;
-		can_send(can1_dev, &can1_frame, K_FOREVER,
-			 tx_irq_callback, "CAN1->LED0 ON");
-		
-		/* CAN2发送LED1开启消息 */
-		can2_frame.data[0] = 1;
-		can_send(can2_dev, &can2_frame, K_FOREVER,
-			 tx_irq_callback, "CAN2->LED1 ON");
-		
-		k_sleep(SLEEP_TIME);
-		
 		/* CAN1发送LED0关闭消息 */
 		can1_frame.data[0] = 0;
-		can_send(can1_dev, &can1_frame, K_FOREVER,
-			 tx_irq_callback, "CAN1->LED0 OFF");
-		
+		struct can_send_item item1 = { .dev = can1_dev, .frame = can1_frame };
+		if (k_msgq_put(&can_send_msgq, &item1, K_NO_WAIT) != 0) {
+			LOG_WRN("CAN1 send queue full, drop LED0 ON frame");
+		}
+
+		/* CAN2发送LED1开启消息 */
+		can2_frame.data[0] = 1;
+		struct can_send_item item2 = { .dev = can2_dev, .frame = can2_frame };
+		if (k_msgq_put(&can_send_msgq, &item2, K_NO_WAIT) != 0) {
+			LOG_WRN("CAN2 send queue full, drop LED1 ON frame");
+		}
+
+#if !IS_ENABLED(CONFIG_CAN_TEST_OVERLOAD)
+		k_sleep(SLEEP_TIME);
+#endif
+
+		/* CAN1发送LED0开启消息 */
+		can1_frame.data[0] = 1;
+		item1.frame = can1_frame;
+		if (k_msgq_put(&can_send_msgq, &item1, K_NO_WAIT) != 0) {
+			LOG_WRN("CAN1 send queue full, drop LED0 OFF frame");
+		}
+
 		/* CAN2发送LED1关闭消息 */
 		can2_frame.data[0] = 0;
-		can_send(can2_dev, &can2_frame, K_FOREVER,
-			 tx_irq_callback, "CAN2->LED1 OFF");
-		
+		item2.frame = can2_frame;
+		if (k_msgq_put(&can_send_msgq, &item2, K_NO_WAIT) != 0) {
+			LOG_WRN("CAN2 send queue full, drop LED1 OFF frame");
+		}
+
+#if !IS_ENABLED(CONFIG_CAN_TEST_OVERLOAD)
 		k_sleep(SLEEP_TIME);
+#else
+		k_sleep(K_NSEC(10));  
+#endif
 	}
 }

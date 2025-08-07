@@ -24,4 +24,10 @@ config SLEEP_TIME_MS
 	  Time to sleep between sending messages.
 	  This is useful to avoid flooding the bus with messages.
 
+config CAN_TEST_OVERLOAD
+	bool "Enable CAN overload test (send messages as fast as possible)"
+	default n
+	help
+	  Enable this to test CAN bus overload by sending messages without delay.
+
 source "Kconfig.zephyr"
