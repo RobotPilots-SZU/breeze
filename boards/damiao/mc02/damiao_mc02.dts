@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 RobotPilots
+ * Copyright (c) 2025 RobotPilots-SZU
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,7 +30,6 @@
 
 	aliases {
 		sw0 = &user_button;
-		memsaccell = &bmi08x_accel;
 	};
 };
 
@@ -94,18 +93,21 @@
 	status = "okay";
 };
 
+&digi_die_temp {
+	status = "okay";
+};
+
 &spi2 {
+	// IMU
 	status = "okay";
 	clocks = <&rcc STM32_CLOCK(APB1, 14U)>,
-	         <&rcc STM32_SRC_PLL2_P SPI123_SEL(0)>;
-	pinctrl-0 = <&spi2_sck_pb13>,
-				<&spi2_miso_pc2_c>,
-				<&spi2_mosi_pc1>;
+			 <&rcc STM32_SRC_PLL2_P SPI123_SEL(0)>;
+	pinctrl-0 = <&spi2_sck_pb13 &spi2_miso_pc2_c &spi2_mosi_pc1>;
 	pinctrl-names = "default";
 	cs-gpios = <&gpioc 0 GPIO_ACTIVE_LOW>,
 			   <&gpioc 3 GPIO_ACTIVE_LOW>;
 	dmas = <&dmamux1 2 2 STM32_DMA_PERIPH_TX>,
-	       <&dmamux1 1 1 STM32_DMA_PERIPH_RX>;
+		   <&dmamux1 1 1 STM32_DMA_PERIPH_RX>;
 	dma-names = "tx", "rx";
 
 	bmi08x_accel: bmi08x@0 {
@@ -133,56 +135,58 @@
 	};
 };
 
-&uart5 {
+&usart2 {
+	// RS485
 	status = "okay";
-	pinctrl-0 = <&uart5_tx_pc12>,
-				<&uart5_rx_pd2>;
+	pinctrl-0 = <&usart3_de_pb14 &usart2_rx_pd6 &usart2_tx_pd5>;
+	pinctrl-names = "default";
+	de-enable = true;
+};
+
+&usart3 {
+	// RS485
+	status = "okay";
+	pinctrl-0 = <&usart3_de_pb14 &usart3_rx_pd9 &usart3_tx_pd8>;
+	pinctrl-names = "default";
+	de-enable = true;
+};
+
+&uart5 {
+	// SBUS
+	status = "okay";
+	pinctrl-0 = <&uart5_rx_pd2 &uart5_tx_pc12>;
 	pinctrl-names = "default";
 	current-speed = <100000>;
-	data-bits = <9>;
-	dmas = <&dmamux1 0 3 STM32_DMA_PERIPH_RX>;
-	dma-names = "rx";
+	data-bits = <8>;
+	stop-bits = "2";
 };
 
 &usart10 {
 	status = "okay";
-	pinctrl-0 = <&usart10_tx_pe3>,
-				<&usart10_rx_pe2>;
+	pinctrl-0 = <&usart10_rx_pe2 &usart10_tx_pe3>;
 	pinctrl-names = "default";
-	// current-speed = <115200>;	// Default is 115200
 };
 
 &fdcan1 {
-    status = "okay";
-    clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
-             <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
-    pinctrl-0 = <&fdcan1_rx_pd0>,
-				<&fdcan1_tx_pd1>;
+	status = "okay";
+	clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
+			 <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
+	pinctrl-0 = <&fdcan1_rx_pd0 <&fdcan1_tx_pd1>;
 	pinctrl-names = "default";
 };
 
 &fdcan2 {
-    status = "okay";
-    clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
-             <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
-	pinctrl-0 = <&fdcan2_rx_pb5>,
-				<&fdcan2_tx_pb6>;
+	status = "okay";
+	clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
+			 <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
+	pinctrl-0 = <&fdcan2_rx_pb5 &fdcan2_tx_pb6>;
 	pinctrl-names = "default";
 };
 
 &fdcan3 {
-    status = "okay";
-    clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
-             <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
-	pinctrl-0 = <&fdcan3_rx_pd12>,
-				<&fdcan3_tx_pd13>;
+	status = "okay";
+	clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
+			 <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
+	pinctrl-0 = <&fdcan3_rx_pd12 &fdcan3_tx_pd13>;
 	pinctrl-names = "default";
-};
-
-&digi_die_temp {
-    status = "okay";
-};
-
-&nvic {
-	status = "disabled";
 };
