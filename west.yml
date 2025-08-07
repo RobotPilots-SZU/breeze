@@ -10,6 +10,9 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
 
   projects:
+    - name: breeze-app-template
+      revision: main
+      path: breeze-app/breeze-app-template
     - name: zephyr
       remote: upstream
       revision: main
