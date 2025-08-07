@@ -1,0 +1,27 @@
+# Private config options for can sample app
+
+# Copyright (c) 2018 Alexander Wachter
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Controller Area Network sample application"
+
+config CAN1_MSG_ID
+	hex "CAN1 Message ID"
+	default 0x11
+	help
+	  CAN1 sending message ID
+
+config CAN2_MSG_ID
+	hex "CAN2 Message ID"
+	default 0x22
+	help
+	  CAN2 sending message ID
+
+config SLEEP_TIME_MS
+	int "Sleep time in milliseconds"
+	default 500
+	help 
+	  Time to sleep between sending messages.
+	  This is useful to avoid flooding the bus with messages.
+
+source "Kconfig.zephyr"
