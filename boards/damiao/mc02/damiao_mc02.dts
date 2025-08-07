@@ -100,6 +100,10 @@
     status = "okay";
 };
 
+&digi_die_temp {
+	status = "okay";
+};
+
 &spi2 {
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1, 14U)>,
@@ -179,6 +183,22 @@
     pinctrl-0 = <&usart3_de_pb14 &usart3_rx_pd9 &usart3_tx_pd8>;
     pinctrl-names = "default";
     de-enable;
+};
+
+&usart2 {
+	// RS485
+	status = "okay";
+	pinctrl-0 = <&usart3_de_pb14 &usart2_rx_pd6 &usart2_tx_pd5>;
+	pinctrl-names = "default";
+	de-enable = true;
+};
+
+&usart3 {
+	// RS485
+	status = "okay";
+	pinctrl-0 = <&usart3_de_pb14 &usart3_rx_pd9 &usart3_tx_pd8>;
+	pinctrl-names = "default";
+	de-enable = true;
 };
 
 &uart5 {
