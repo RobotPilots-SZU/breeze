@@ -13,7 +13,8 @@
 * 交叉通信：CAN1消息控制LED1，CAN2消息控制LED0
 * 实时CAN状态监控和错误计数
 * 通过Kconfig配置消息ID和时序
-* 使用Zephyr日志系统进行全面日志记录
+* k_msgq用于消息发送队列
+* 支持总线过载测试
 
 示例在两个CAN控制器之间发送交替的LED控制命令，
 演示双向通信和LED状态指示。
@@ -25,7 +26,6 @@
 .. zephyr-app-commands::
    :zephyr-app: samples/boards/rm_typec/can
    :board: rm_typec
-   :goals: build flash
 
 配置选项
 ========
@@ -35,6 +35,7 @@
 * ``CONFIG_CAN1_MSG_ID``：CAN1消息ID（默认：0x11）
 * ``CONFIG_CAN2_MSG_ID``：CAN2消息ID（默认：0x22）
 * ``CONFIG_SLEEP_TIME_MS``：消息传输间隔，单位毫秒（默认：500）
+* ``CONFIG_CAN_TEST_OVERLOAD``：使能CAN总线过载测试（默认关闭）。开启后，消息将尽可能快地发送，用于测试总线负载和容错能力。
 
 示例输出
 ========
@@ -86,3 +87,30 @@ CAN1和CAN2接好线后，led开始闪烁。
    [00:01:36.195,000] <inf> can_sample: CAN2 received message: ID=0x11, data[0]=0x00
    [00:01:36.195,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x00
    [00:01:36.196,000] <wrn> can_sample: CAN state: error-warning, RX error count: 0, TX error count: 116
+
+使能总线过载测试后，看到队列满和消息丢弃的情况。
+.. code-block:: console
+   [00:00:06.734,000] <wrn> can_sample: CAN2 send queue full, drop LED1 OFF frame
+   [00:00:06.750,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x01
+   --- 549 messages dropped ---
+   [00:00:06.766,000] <inf> can_sample: CAN2 received message: ID=0x11, data[0]=0x00
+   --- 320 messages dropped ---
+   [00:00:06.782,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x00
+   --- 327 messages dropped ---
+   [00:00:06.798,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x00
+   --- 322 messages dropped ---
+   [00:00:06.814,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x00
+   --- 321 messages dropped ---
+   [00:00:06.831,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x00
+   --- 324 messages dropped ---
+   [00:00:06.847,000] <inf> can_sample: CAN2 received message: ID=0x11, data[0]=0x00
+   --- 322 messages dropped ---
+   [00:00:06.863,000] <inf> can_sample: CAN2 received message: ID=0x11, data[0]=0x00
+   --- 324 messages dropped ---
+   [00:00:06.879,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x01
+   --- 321 messages dropped ---
+   [00:00:06.895,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x00
+   --- 321 messages dropped ---
+   [00:00:06.912,000] <wrn> can_sample: CAN1 send queue full, drop LED0 OFF frame
+   --- 328 messages dropped ---
+   [00:00:06.928,000] <inf> can_sample: CAN1 received message: ID=0x22, data[0]=0x01
