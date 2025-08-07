@@ -1,0 +1,7 @@
+# Copyright (c) 2016 Linaro Limited.
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_RM_TYPEC
+    bool "DJI C Development Board"
+	select SOC_STM32F407XG
+

@@ -1,0 +1,7 @@
+board:
+  name: rm_typec
+  full_name: DJI RM Type-C Board
+  vendor: dji
+  socs:
+    - name: stm32f407xx
+

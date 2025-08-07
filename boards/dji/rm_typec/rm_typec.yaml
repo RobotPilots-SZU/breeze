@@ -1,0 +1,22 @@
+identifier: rm_typec
+name: DJI RoboMaster Type-C Development Board
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 128
+flash: 1024
+supported:
+  - gpio
+  - uart
+  - i2c
+  - spi
+  - can
+  - pwm
+  - counter
+  - adc
+  - dac
+  - usb_device
+  - watchdog
+vendor: dji
