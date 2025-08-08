@@ -48,6 +48,15 @@
         };
     };
 
+	pwmbuzzer {
+		status = "okay";
+		compatible = "pwm-leds";
+		buzzer: buzzer_pwm {
+        	pwms = <&pwm4 3 PWM_MSEC(1) PWM_POLARITY_NORMAL>; // TIM4_CH3 PD14
+			label = "buzzer";
+		};
+	};
+
 	gpio_keys {
 		compatible = "gpio-keys";
 		user_button: button {
@@ -68,6 +77,7 @@
         pwm-led0 = &red_pwm_led;
         pwm-led1 = &green_pwm_led;
         pwm-led2 = &blue_pwm_led;
+        buzzer0 = &buzzer;
 	};
 };
 
@@ -159,6 +169,16 @@ zephyr_udc0: &usbotg_fs {
     pwm5: pwm {
         status = "disabled";
         pinctrl-0 = <&tim5_ch1_ph10 &tim5_ch2_ph11 &tim5_ch3_ph12>;
+        pinctrl-names = "default";
+    };
+};
+
+&timers4 {
+    st,prescaler = <167>; // 1 MHz timer clock
+    status = "okay";
+    pwm4: pwm {
+        status = "okay";
+        pinctrl-0 = <&tim4_ch3_pd14>;
         pinctrl-names = "default";
     };
 };
