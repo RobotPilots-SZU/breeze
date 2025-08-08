@@ -66,6 +66,14 @@
 		};
 	};
 
+	// sensor_fusion: fusion {
+	// 	status = "okay";
+	// 	compatible = "zephyr,sensor-fusion-ahrs";
+	// 	accel-dev = <&bmi08x_accel>; /* Accelerometer device phandle */
+	// 	gyro-dev = <&bmi08x_gyro>; /* Gyroscope device phandle */
+	// 	/* magn-dev = <&magn0>; */ /* Magnetometer device phandle - not available */
+	// };
+
 	aliases {
 		led0 = &red_led;
 		led1 = &green_led;
