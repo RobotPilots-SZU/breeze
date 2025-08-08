@@ -7,5 +7,5 @@
 /* This board disables can1 by default in favor of USB. */
 
 &can1 {
-	status = "okay";
+    status = "okay";
 };

@@ -3,5 +3,5 @@
 
 config BOARD_RM_TYPEC
     bool "DJI C Development Board"
-	select SOC_STM32F407XG
+    select SOC_STM32F407XG
 

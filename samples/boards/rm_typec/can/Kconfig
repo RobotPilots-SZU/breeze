@@ -6,28 +6,28 @@
 mainmenu "Controller Area Network sample application"
 
 config CAN1_MSG_ID
-	hex "CAN1 Message ID"
-	default 0x11
-	help
-	  CAN1 sending message ID
+    hex "CAN1 Message ID"
+    default 0x11
+    help
+      CAN1 sending message ID
 
 config CAN2_MSG_ID
-	hex "CAN2 Message ID"
-	default 0x22
-	help
-	  CAN2 sending message ID
+    hex "CAN2 Message ID"
+    default 0x22
+    help
+      CAN2 sending message ID
 
 config SLEEP_TIME_MS
-	int "Sleep time in milliseconds"
-	default 500
-	help 
-	  Time to sleep between sending messages.
-	  This is useful to avoid flooding the bus with messages.
+    int "Sleep time in milliseconds"
+    default 500
+    help 
+      Time to sleep between sending messages.
+      This is useful to avoid flooding the bus with messages.
 
 config CAN_TEST_OVERLOAD
-	bool "Enable CAN overload test (send messages as fast as possible)"
-	default n
-	help
-	  Enable this to test CAN bus overload by sending messages without delay.
+    bool "Enable CAN overload test (send messages as fast as possible)"
+    default n
+    help
+      Enable this to test CAN bus overload by sending messages without delay.
 
 source "Kconfig.zephyr"
