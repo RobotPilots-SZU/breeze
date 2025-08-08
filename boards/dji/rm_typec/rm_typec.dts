@@ -8,31 +8,31 @@
     model = "DJI C Dev Board";
     compatible = "dji,c-board";
 
-	chosen {
-		zephyr,console = &usart1;
-		zephyr,shell-uart = &usart1;
-		zephyr,sram = &sram0;
-		zephyr,flash = &flash0;
-		zephyr,ccm = &ccm0;
-		zephyr,canbus = &can2;
-	};
+    chosen {
+        zephyr,console = &usart1;
+        zephyr,shell-uart = &usart1;
+        zephyr,sram = &sram0;
+        zephyr,flash = &flash0;
+        zephyr,ccm = &ccm0;
+        zephyr,canbus = &can2;
+    };
 
-	leds: leds {
-		compatible = "gpio-leds";
+    leds: leds {
+        compatible = "gpio-leds";
         status = "okay";
-		red_led: led_1 {
-			gpios = <&gpioh 12 GPIO_ACTIVE_HIGH>;
-			label = "User LED1";
-		};
-		green_led: led_2 {
-			gpios = <&gpioh 11 GPIO_ACTIVE_HIGH>;
-			label = "User LED2";
-		};
-		blue_led: led_3 {
-			gpios = <&gpioh 10 GPIO_ACTIVE_HIGH>;
-			label = "User LED3";
-		};
-	};   
+        red_led: led_1 {
+            gpios = <&gpioh 12 GPIO_ACTIVE_HIGH>;
+            label = "User LED1";
+        };
+        green_led: led_2 {
+            gpios = <&gpioh 11 GPIO_ACTIVE_HIGH>;
+            label = "User LED2";
+        };
+        blue_led: led_3 {
+            gpios = <&gpioh 10 GPIO_ACTIVE_HIGH>;
+            label = "User LED3";
+        };
+    };   
 
     pwmleds: pwmleds {
         compatible = "pwm-leds";
@@ -48,38 +48,38 @@
         };
     };
 
-	pwmbuzzer {
-		status = "okay";
-		compatible = "pwm-leds";
-		buzzer: buzzer_pwm {
-        	pwms = <&pwm4 3 PWM_MSEC(1) PWM_POLARITY_NORMAL>; // TIM4_CH3 PD14
-			label = "buzzer";
-		};
-	};
+    pwmbuzzer {
+        status = "okay";
+        compatible = "pwm-leds";
+        buzzer: buzzer_pwm {
+            pwms = <&pwm4 3 PWM_MSEC(1) PWM_POLARITY_NORMAL>; // TIM4_CH3 PD14
+            label = "buzzer";
+        };
+    };
 
-	gpio_keys {
-		compatible = "gpio-keys";
-		user_button: button {
-			label = "Key";
-			gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
-			zephyr,code = <INPUT_KEY_0>;
-		};
-	};
+    gpio_keys {
+        compatible = "gpio-keys";
+        user_button: button {
+            label = "Key";
+            gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
+            zephyr,code = <INPUT_KEY_0>;
+        };
+    };
 
-	// sensor_fusion: fusion {
-	// 	status = "okay";
-	// 	compatible = "zephyr,sensor-fusion-ahrs";
-	// 	accel-dev = <&bmi08x_accel>; /* Accelerometer device phandle */
-	// 	gyro-dev = <&bmi08x_gyro>; /* Gyroscope device phandle */
-	// 	/* magn-dev = <&magn0>; */ /* Magnetometer device phandle - not available */
-	// };
+    // sensor_fusion: fusion {
+    // 	status = "okay";
+    // 	compatible = "zephyr,sensor-fusion-ahrs";
+    // 	accel-dev = <&bmi08x_accel>; /* Accelerometer device phandle */
+    // 	gyro-dev = <&bmi08x_gyro>; /* Gyroscope device phandle */
+    // 	/* magn-dev = <&magn0>; */ /* Magnetometer device phandle - not available */
+    // };
 
-	aliases {
-		led0 = &red_led;
-		led1 = &green_led;
-		led2 = &blue_led;
-		sw0 = &user_button;
-		die-temp0 = &die_temp;
+    aliases {
+        led0 = &red_led;
+        led1 = &green_led;
+        led2 = &blue_led;
+        sw0 = &user_button;
+        die-temp0 = &die_temp;
         usart0 = &usart1;
         usart1 = &usart6;
         pwm-led0 = &red_pwm_led;
@@ -88,89 +88,89 @@
         buzzer0 = &buzzer;
         accel0 = &bmi08x_accel;
         gyro0 = &bmi08x_gyro;
-	};
+    };
 };
 
 &clk_lsi {
-	status = "okay";
+    status = "okay";
 };
 
 &clk_hse {
-	clock-frequency = <DT_FREQ_M(12)>;
-	status = "okay";
+    clock-frequency = <DT_FREQ_M(12)>;
+    status = "okay";
 };
 
 &pll {
-	div-m = <6>;
-	mul-n = <168>;
-	div-p = <2>;
-	div-q = <7>;
-	clocks = <&clk_hse>;
-	status = "okay";
+    div-m = <6>;
+    mul-n = <168>;
+    div-p = <2>;
+    div-q = <7>;
+    clocks = <&clk_hse>;
+    status = "okay";
 };
 
 &rcc {
-	clocks = <&pll>;
-	clock-frequency = <DT_FREQ_M(168)>;
-	ahb-prescaler = <1>;
-	apb1-prescaler = <2>;
-	apb2-prescaler = <2>;
+    clocks = <&pll>;
+    clock-frequency = <DT_FREQ_M(168)>;
+    ahb-prescaler = <1>;
+    apb1-prescaler = <2>;
+    apb2-prescaler = <2>;
 };
 
 &usart1 {
-	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pb7>;
-	pinctrl-names = "default";
-	current-speed = <115200>;
-	status = "okay";
+    pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pb7>;
+    pinctrl-names = "default";
+    current-speed = <115200>;
+    status = "okay";
 };
 &usart6 {
-	pinctrl-0 = <&usart6_tx_pg14 &usart6_rx_pg9>;
-	pinctrl-names = "default";
-	current-speed = <115200>;
-	status = "okay";
+    pinctrl-0 = <&usart6_tx_pg14 &usart6_rx_pg9>;
+    pinctrl-names = "default";
+    current-speed = <115200>;
+    status = "okay";
 };
 
 &flash0 {
-	status = "okay";
+    status = "okay";
 };
 
 &rtc {
-	clocks = <&rcc STM32_CLOCK_BUS_APB1 0x10000000>,
-		 <&rcc STM32_SRC_LSI RTC_SEL(2)>;
-	status = "okay";
+    clocks = <&rcc STM32_CLOCK_BUS_APB1 0x10000000>,
+         <&rcc STM32_SRC_LSI RTC_SEL(2)>;
+    status = "okay";
 
-	backup_regs {
-		status = "okay";
-	};
+    backup_regs {
+        status = "okay";
+    };
 };
 
 zephyr_udc0: &usbotg_fs {
-	pinctrl-0 = <&usb_otg_fs_dm_pa11 &usb_otg_fs_dp_pa12>;
-	pinctrl-names = "default";
-	status = "okay";
+    pinctrl-0 = <&usb_otg_fs_dm_pa11 &usb_otg_fs_dp_pa12>;
+    pinctrl-names = "default";
+    status = "okay";
 };
 
 &can1 {
-	pinctrl-0 = <&can1_rx_pd0 &can1_tx_pd1>;
-	pinctrl-names = "default";
-	bus-speed = <1000000>;
-	status = "okay";
+    pinctrl-0 = <&can1_rx_pd0 &can1_tx_pd1>;
+    pinctrl-names = "default";
+    bus-speed = <1000000>;
+    status = "okay";
 };
 
 &can2 {
-	pinctrl-0 = <&can2_rx_pb5 &can2_tx_pb6>;
-	pinctrl-names = "default";
-	bus-speed = <1000000>;
-	status = "okay";
+    pinctrl-0 = <&can2_rx_pb5 &can2_tx_pb6>;
+    pinctrl-names = "default";
+    bus-speed = <1000000>;
+    status = "okay";
 };
 
 
 &dma1 {
-	status = "okay";
+    status = "okay";
 };
 
 &dma2 {
-	status = "okay";
+    status = "okay";
 };
 
 &timers5 {
@@ -196,74 +196,74 @@ zephyr_udc0: &usbotg_fs {
 
 
 &plli2s {
-	/* Minimize audio clock error (with i2s mck-enabled) for all of:
-	 * - 22.05kHz / 16b, 24b or 32b
-	 * - 44.1kHz  / 16b, 24b or 32b
-	 * - 88.2kHz  / 16b or 24b
-	 * Note: because the PLLI2S is dependent on the main PLL, the latter
-	 *       should not be changed without checking impact on PLLI2S
-	 */
-	mul-n = <271>;
-	div-r = <2>;
-	status = "okay";
+    /* Minimize audio clock error (with i2s mck-enabled) for all of:
+     * - 22.05kHz / 16b, 24b or 32b
+     * - 44.1kHz  / 16b, 24b or 32b
+     * - 88.2kHz  / 16b or 24b
+     * Note: because the PLLI2S is dependent on the main PLL, the latter
+     *       should not be changed without checking impact on PLLI2S
+     */
+    mul-n = <271>;
+    div-r = <2>;
+    status = "okay";
 };
 
 &i2s3 {
-	mck-enabled;
-	pinctrl-0 = <&i2s3_ws_pa4 &i2s3_ck_pc10 &i2s3_sd_pc12 &i2s3_mck_pc7>;
-	pinctrl-names = "default";
-	clocks = <&rcc STM32_CLOCK(APB1, 15U)>,
-		 <&rcc STM32_SRC_PLLI2S_R I2S_SEL(0)>;
-	status = "okay";
+    mck-enabled;
+    pinctrl-0 = <&i2s3_ws_pa4 &i2s3_ck_pc10 &i2s3_sd_pc12 &i2s3_mck_pc7>;
+    pinctrl-names = "default";
+    clocks = <&rcc STM32_CLOCK(APB1, 15U)>,
+         <&rcc STM32_SRC_PLLI2S_R I2S_SEL(0)>;
+    status = "okay";
 };
 
 &i2c1 {
-	clock-frequency = <I2C_BITRATE_FAST>;
-	pinctrl-0 = <&i2c1_scl_pb6 &i2c1_sda_pb9>;
-	pinctrl-names = "default";
-	status = "okay";
+    clock-frequency = <I2C_BITRATE_FAST>;
+    pinctrl-0 = <&i2c1_scl_pb6 &i2c1_sda_pb9>;
+    pinctrl-names = "default";
+    status = "okay";
 
-	audio_codec: cs43l22@4a {
-		compatible = "cirrus,cs43l22";
-		reg = <0x4a>;
-		reset-gpios = <&gpiod 4 0>;
-	};
+    audio_codec: cs43l22@4a {
+        compatible = "cirrus,cs43l22";
+        reg = <0x4a>;
+        reset-gpios = <&gpiod 4 0>;
+    };
 };
 
 &die_temp {
-	status = "okay";
+    status = "okay";
 };
 
 &spi1 {
-	// IMU BMI088
-	status = "okay";
-	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pa7>;
-	pinctrl-names = "default";
-	cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>,
-			   <&gpiob 0 GPIO_ACTIVE_LOW>;
+    // IMU BMI088
+    status = "okay";
+    pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pa7>;
+    pinctrl-names = "default";
+    cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>,
+               <&gpiob 0 GPIO_ACTIVE_LOW>;
 
-	bmi08x_accel: bmi08x@0 {
-		compatible = "bosch,bmi08x-accel";
-		reg = <0>;
-		int-gpios = <&gpioc 4 GPIO_ACTIVE_HIGH>;
-		spi-max-frequency = <DT_FREQ_M(8)>;
-		int1-map-io = <0x01>;
-		int2-map-io = <0x00>;
-		int1-conf-io = <0x04>;
-		int2-conf-io = <0x00>;
-		accel-hz = "800";
-		accel-fs = <24>;
-	};
+    bmi08x_accel: bmi08x@0 {
+        compatible = "bosch,bmi08x-accel";
+        reg = <0>;
+        int-gpios = <&gpioc 4 GPIO_ACTIVE_HIGH>;
+        spi-max-frequency = <DT_FREQ_M(8)>;
+        int1-map-io = <0x01>;
+        int2-map-io = <0x00>;
+        int1-conf-io = <0x04>;
+        int2-conf-io = <0x00>;
+        accel-hz = "800";
+        accel-fs = <24>;
+    };
 
-	bmi08x_gyro: bmi08x@1 {
-		compatible = "bosch,bmi08x-gyro";
-		reg = <1>;
-		int-gpios = <&gpioc 5 GPIO_ACTIVE_HIGH>;
-		spi-max-frequency = <DT_FREQ_M(8)>;
-		int3-4-map-io = <0x01>;
-		int3-4-conf-io = <0x02>;
-		gyro-hz = "1000_116";
-		gyro-fs = <1000>;
-	};
+    bmi08x_gyro: bmi08x@1 {
+        compatible = "bosch,bmi08x-gyro";
+        reg = <1>;
+        int-gpios = <&gpioc 5 GPIO_ACTIVE_HIGH>;
+        spi-max-frequency = <DT_FREQ_M(8)>;
+        int3-4-map-io = <0x01>;
+        int3-4-conf-io = <0x02>;
+        gyro-hz = "1000_116";
+        gyro-fs = <1000>;
+    };
 };
 

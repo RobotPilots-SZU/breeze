@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &leds {
-	status = "disabled";
+    status = "disabled";
 };
 
 &pwmleds {
-	status = "okay";
+    status = "okay";
 };
 
 &pwm5 {
-	status = "okay";
+    status = "okay";
 };
