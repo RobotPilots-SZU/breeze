@@ -30,5 +30,11 @@ manifest:
           - hal_st
           - hal_stm32
 
+    - name: sensor-fusion-ahrs
+      path: modules/lib/sensor-fusion-ahrs
+      url: https://github.com/tmilkovic51/zephyr_sensor_fusion
+      revision: main
+      submodules: true
+
   self:
     path: breeze

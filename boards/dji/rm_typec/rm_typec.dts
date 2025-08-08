@@ -78,6 +78,8 @@
         pwm-led1 = &green_pwm_led;
         pwm-led2 = &blue_pwm_led;
         buzzer0 = &buzzer;
+        accel0 = &bmi08x_accel;
+        gyro0 = &bmi08x_gyro;
 	};
 };
 
@@ -222,5 +224,38 @@ zephyr_udc0: &usbotg_fs {
 
 &die_temp {
 	status = "okay";
+};
+
+&spi1 {
+	// IMU BMI088
+	status = "okay";
+	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pa7>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>,
+			   <&gpiob 0 GPIO_ACTIVE_LOW>;
+
+	bmi08x_accel: bmi08x@0 {
+		compatible = "bosch,bmi08x-accel";
+		reg = <0>;
+		int-gpios = <&gpioc 4 GPIO_ACTIVE_HIGH>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+		int1-map-io = <0x01>;
+		int2-map-io = <0x00>;
+		int1-conf-io = <0x04>;
+		int2-conf-io = <0x00>;
+		accel-hz = "800";
+		accel-fs = <24>;
+	};
+
+	bmi08x_gyro: bmi08x@1 {
+		compatible = "bosch,bmi08x-gyro";
+		reg = <1>;
+		int-gpios = <&gpioc 5 GPIO_ACTIVE_HIGH>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+		int3-4-map-io = <0x01>;
+		int3-4-conf-io = <0x02>;
+		gyro-hz = "1000_116";
+		gyro-fs = <1000>;
+	};
 };
 
