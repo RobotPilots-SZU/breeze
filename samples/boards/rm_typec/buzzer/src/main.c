@@ -317,7 +317,7 @@ static void play_note(int frequency, int duration_ms)
 }
 
 // Play song interface function
-int play_song(enum song_type song)
+int play_song(enum song_type song, double speed_multiplier, double pitch_multiplier)
 {
 	if (song >= SONG_COUNT) {
 		printk("Error: Invalid song type\n");
@@ -329,13 +329,25 @@ int play_song(enum song_type song)
 		return -1;
 	}
 	
-	printk("Playing song %d...\n", song);
+	if (speed_multiplier <= 0.0) {
+		printk("Error: Invalid speed multiplier\n");
+		return -1;
+	}
+	
+	if (pitch_multiplier <= 0.0) {
+		printk("Error: Invalid pitch multiplier\n");
+		return -1;
+	}
+	
+	printk("Playing song %d at %.2fx speed and %.2fx pitch...\n", song, speed_multiplier, pitch_multiplier);
 	
 	const struct note_duration *notes = songs[song].notes;
 	size_t note_count = songs[song].count;
 	
 	for (size_t i = 0; i < note_count; i++) {
-		play_note(notes[i].note, notes[i].duration);
+		int adjusted_duration = (int)(notes[i].duration / speed_multiplier);
+		int adjusted_frequency = (notes[i].note == NOTE_REST) ? NOTE_REST : (int)(notes[i].note * pitch_multiplier);
+		play_note(adjusted_frequency, adjusted_duration);
 	}
 	
 	printk("Song finished\n");
@@ -353,8 +365,8 @@ int main(void)
 
 	printk("Music player started (PWM channel %d)\n", BUZZER_PWM_CHANNEL);
 
-	// Play Pirates of the Caribbean theme
-	play_song(SONG_PIRATES_CARIBBEAN);
+	// Play Pirates of the Caribbean theme at 1.25x speed and 2.0x pitch (one octave higher)
+	play_song(SONG_PIRATES_CARIBBEAN, 1.25, 2.0);
 
 	return 0;
 }
