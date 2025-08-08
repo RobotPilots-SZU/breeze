@@ -7,3 +7,44 @@
 
 rsource "drivers/Kconfig"
 rsource "lib/Kconfig"
+
+menuconfig BREEZE
+    bool "Breeze"
+    select FPU
+    help
+        Enable Breeze, a lightweight and modular framework for RoboMaster
+        competitions. Breeze provides a set of tools and libraries to help
+        you build and manage your RoboMaster robot software efficiently.
+
+    config BREEZE_KERNEL
+    bool "Enable Breeze required kernel features"
+    default y
+    select THREAD_RUNTIME_STATS
+    help
+        Enable Breeze kernel features that are required for the framework to
+        function properly.
+
+    config BREEZE_LIB_C
+    bool "Enable full C libraries"
+    default y
+    select GNU_C_EXTENSIONS
+    select REQUIRES_FULL_LIBC
+    select REQUIRES_FLOAT_PRINTF
+    help
+        Enable the C libraries fully support.
+
+    config BREEZE_LIB_CPP
+    bool "Enable full C++ libraries"
+    default y
+    select CPP
+    select REQUIRES_FULL_LIBCPP
+    help
+        Enable the C++ libraries fully support.
+
+    config BREEZE_LOG
+    bool "Enable Breeze logging"
+    default y
+    select LOG
+    select LOG_TIMESTAMP_USE_REALTIME
+    help
+        Enable logging support in Breeze.
