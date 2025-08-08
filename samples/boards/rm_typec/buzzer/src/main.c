@@ -1,6 +1,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/pwm.h>
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(main);
 
 // Musical note frequencies (Hz) - Extended range
 // Octave 2
@@ -104,6 +106,7 @@ enum song_type {
     SONG_SUPER_MARIO,
     SONG_MAX_VERSTAPPEN,
     SONG_PIRATES_CARIBBEAN,
+    SONG_GALA, 
     SONG_COUNT
 };
 
@@ -121,26 +124,32 @@ enum song_type {
 static const struct device *buzzer_dev;
 
 // Song definitions
+#ifdef CONFIG_SONG_TWINKLE_STAR_ENABLE
 static const struct note_duration twinkle_star[] = {
     {NOTE_C4, 500}, {NOTE_C4, 500}, {NOTE_G4, 500}, {NOTE_G4, 500},
     {NOTE_A4, 500}, {NOTE_A4, 500}, {NOTE_G4, 1000},
     {NOTE_F4, 500}, {NOTE_F4, 500}, {NOTE_E4, 500}, {NOTE_E4, 500},
     {NOTE_D4, 500}, {NOTE_D4, 500}, {NOTE_C4, 1000},
 };
+#endif
 
+#ifdef CONFIG_SONG_HAPPY_BIRTHDAY_ENABLE
 static const struct note_duration happy_birthday[] = {
     {NOTE_C4, 250}, {NOTE_C4, 250}, {NOTE_D4, 500}, {NOTE_C4, 500},
     {NOTE_F4, 500}, {NOTE_E4, 1000},
     {NOTE_C4, 250}, {NOTE_C4, 250}, {NOTE_D4, 500}, {NOTE_C4, 500},
     {NOTE_G4, 500}, {NOTE_F4, 1000},
 };
+#endif
 
+#ifdef CONFIG_SONG_BEEP_TEST_ENABLE
 static const struct note_duration beep_test[] = {
     {NOTE_A4, 200}, {NOTE_REST, 100}, {NOTE_A4, 200}, {NOTE_REST, 100},
     {NOTE_A4, 200}, {NOTE_REST, 500},
 };
+#endif
 
-// Game of Thrones theme song - Enhanced with extended note range
+#ifdef CONFIG_SONG_GAME_OF_THRONES_ENABLE
 static const struct note_duration game_of_thrones[] = {
     // Opening melody - lower octave for dramatic effect
     {NOTE_G3, 500}, {NOTE_C3, 500}, {NOTE_DS3, 250}, {NOTE_F3, 250},
@@ -168,8 +177,9 @@ static const struct note_duration game_of_thrones[] = {
     // Final dramatic notes
     {NOTE_G2, 1000}, {NOTE_C3, 1500}, {NOTE_REST, 1000},
 };
+#endif
 
-// Super Mario Bros Theme Song
+#ifdef CONFIG_SONG_SUPER_MARIO_ENABLE
 static const struct note_duration super_mario[] = {
     // Main theme opening
     {NOTE_E5, 150}, {NOTE_E5, 150}, {NOTE_REST, 150}, {NOTE_E5, 150},
@@ -209,8 +219,9 @@ static const struct note_duration super_mario[] = {
     // Classic Mario ending - matching the sheet music (1 1)
     {NOTE_C6, 300}, {NOTE_C6, 600},
 };
+#endif
 
-// Max Verstappen Theme Song - "dudududu Max Verstappen"
+#ifdef CONFIG_SONG_MAX_VERSTAPPEN_ENABLE
 static const struct note_duration max_verstappen[] = {
     // "du du du du du"
     {NOTE_G5, 200}, {NOTE_G5, 200}, {NOTE_G5, 200}, {NOTE_D6, 400},
@@ -228,8 +239,9 @@ static const struct note_duration max_verstappen[] = {
     {NOTE_C6, 300}, {NOTE_C6, 300}, {NOTE_AS5, 300}, {NOTE_A5, 600},
     {NOTE_REST, 400},
 };
+#endif
 
-// Pirates of the Caribbean - "He's a Pirate" Theme
+#ifdef CONFIG_SONG_PIRATES_CARIBBEAN_ENABLE
 static const struct note_duration pirates_caribbean[] = {
     // Main theme opening
     {NOTE_A4, 200}, {NOTE_C5, 200}, {NOTE_D5, 200}, {NOTE_D5, 200},
@@ -281,19 +293,100 @@ static const struct note_duration pirates_caribbean[] = {
     {NOTE_A4, 200}, {NOTE_D5, 200}, {NOTE_F5, 200}, {NOTE_A5, 400},
     {NOTE_D6, 800}, {NOTE_REST, 400},
 };
+#endif
+
+#ifdef CONFIG_SONG_GALA_ENABLE
+static const struct note_duration song_gala[] = {
+    {NOTE_B4, 200}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_D5, 400}, {NOTE_G4, 200}, {NOTE_C5, 200}, {NOTE_C5, 200}, {NOTE_G4, 200}, {NOTE_B4, 200}, {NOTE_C5, 200},
+    {NOTE_B4, 200}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_D5, 400}, {NOTE_G4, 200}, {NOTE_C5, 200}, {NOTE_C5, 200}, {NOTE_G4, 200}, {NOTE_B4, 200}, {NOTE_C5, 200},
+    {NOTE_B4, 200}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_D5, 400}, {NOTE_G4, 200}, {NOTE_C5, 200}, {NOTE_C5, 200}, {NOTE_G4, 200}, {NOTE_B4, 200}, {NOTE_C5, 200},
+    {NOTE_B4, 200}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_B4, 400}, {NOTE_G4, 200}, {NOTE_D5, 400}, {NOTE_G4, 200}, {NOTE_C5, 200}, {NOTE_C5, 200}, {NOTE_G4, 200}, {NOTE_D4, 400},
+    {NOTE_E4, 1200}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_G4, 800},
+    {NOTE_C5, 800}, {NOTE_B4, 800}, {NOTE_E4, 800}, {NOTE_D4, 400},
+    {NOTE_E4, 1200}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_C5, 1600},
+    {NOTE_B4, 400}, {NOTE_D5, 800}, {NOTE_E4, 2000},
+    {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_B4, 800},
+    {NOTE_C5, 800}, {NOTE_B4, 800}, {NOTE_E4, 800}, {NOTE_D4, 400},
+    {NOTE_E4, 1200}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_B4, 800},
+    {NOTE_C5, 800}, {NOTE_D5, 2000},
+
+    {NOTE_REST, 800}, {NOTE_E4, 400}, {NOTE_REST, 0}, {NOTE_E4, 400}, {NOTE_D4, 200}, {NOTE_E4, 600}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_G4, 400},
+    {NOTE_REST, 400}, {NOTE_E4, 400}, {NOTE_REST, 0}, {NOTE_E4, 400}, {NOTE_D4, 200}, {NOTE_E4, 600}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_G4, 800}, {NOTE_C4, 1200},
+    {NOTE_REST, 400}, {NOTE_E4, 400}, {NOTE_REST, 0}, {NOTE_E4, 400}, {NOTE_D4, 200}, {NOTE_E4, 600}, {NOTE_D4, 400}, {NOTE_C4, 400}, {NOTE_D4, 400},
+    {NOTE_REST, 400}, {NOTE_E4, 400}, {NOTE_REST, 0}, {NOTE_E4, 400}, {NOTE_D4, 200}, {NOTE_E4, 600}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_G4, 400},
+    {NOTE_REST, 400}, {NOTE_E4, 400}, {NOTE_REST, 0}, {NOTE_E4, 400}, {NOTE_D4, 200}, {NOTE_E4, 600}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_C5, 800}, {NOTE_C4, 1200},
+    {NOTE_REST, 400}, {NOTE_E4, 400}, {NOTE_REST, 0}, {NOTE_E4, 400}, {NOTE_D4, 200}, {NOTE_E4, 600}, {NOTE_D4, 400}, {NOTE_B3, 400}, {NOTE_A3, 200}, {NOTE_G3, 1000},
+    {NOTE_REST, 200}, {NOTE_G3, 200}, {NOTE_REST, 0}, {NOTE_G3, 200}, {NOTE_REST, 0}, {NOTE_G3, 200}, {NOTE_G4, 800}, {NOTE_E4, 600}, {NOTE_D4, 200}, {NOTE_C4, 400}, {NOTE_REST, 0}, {NOTE_C4, 800},
+    {NOTE_REST, 200}, {NOTE_C4, 400}, {NOTE_REST, 0}, {NOTE_C4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_A3, 1200},
+    {NOTE_REST, 400}, {NOTE_A3, 400}, {NOTE_E4, 400}, {NOTE_D4, 400}, {NOTE_C4, 400}, {NOTE_D4, 1200}, {NOTE_REST, 400},
+    {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 1200}, {NOTE_E4, 400}, {NOTE_G4, 400}, {NOTE_E4, 200}, {NOTE_G4, 600}, {NOTE_B4, 800}, {NOTE_C5, 1200},
+    {NOTE_C4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_G4, 800}, {NOTE_A4, 800}, {NOTE_G4, 200}, {NOTE_A4, 600}, {NOTE_G4, 200}, {NOTE_REST, 20}, {NOTE_G4, 600}, {NOTE_REST, 20}, {NOTE_G4, 800}, {NOTE_D4, 1600},
+    {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 1200}, {NOTE_E4, 400}, {NOTE_G4, 400}, {NOTE_E4, 200}, {NOTE_G4, 600}, {NOTE_B4, 800}, {NOTE_C5, 1200},
+    {NOTE_C4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_B4, 800}, {NOTE_A4, 1200}, {NOTE_REST, 0}, {NOTE_A4, 400}, {NOTE_G4, 200}, {NOTE_A4, 600}, {NOTE_C5, 800}, {NOTE_D5, 1200},
+    {NOTE_REST, 400}, {NOTE_G4, 400}, {NOTE_C5, 400}, {NOTE_B4, 200}, {NOTE_C5, 2400},
+    {NOTE_REST, 800}, {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 1200}, {NOTE_E4, 400}, {NOTE_G4, 400}, {NOTE_E4, 200}, {NOTE_G4, 600}, {NOTE_B4, 800}, {NOTE_C5, 1200},
+    {NOTE_C4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_C5, 800}, {NOTE_A4, 1200}, {NOTE_REST, 0}, {NOTE_A4, 400}, {NOTE_G4, 200}, {NOTE_A4, 600}, {NOTE_C5, 800}, {NOTE_D5, 1200},
+    {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 1200}, {NOTE_E4, 400}, {NOTE_G4, 400}, {NOTE_E4, 200}, {NOTE_G4, 600}, {NOTE_B4, 800}, {NOTE_C5, 1200},
+    {NOTE_C4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_G4, 800}, {NOTE_A4, 1000}, {NOTE_G4, 200}, {NOTE_A4, 400}, {NOTE_G4, 200}, {NOTE_REST, 20}, {NOTE_G4, 600}, {NOTE_REST, 20}, {NOTE_G4, 800},
+    {NOTE_D4, 1600},
+    {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 800}, {NOTE_REST, 200}, {NOTE_G4, 400}, {NOTE_E4, 200}, {NOTE_G4, 600}, {NOTE_D5, 800}, {NOTE_C5, 1200},
+    {NOTE_C4, 400}, {NOTE_D4, 400}, {NOTE_E4, 400}, {NOTE_C5, 800}, {NOTE_A4, 1000},
+    {NOTE_G4, 200}, {NOTE_A4, 400}, {NOTE_G4, 200}, {NOTE_A4, 600}, {NOTE_C5, 800}, {NOTE_D5, 1200},
+    {NOTE_REST, 400}, {NOTE_G4, 400}, {NOTE_C5, 400}, {NOTE_B4, 200}, {NOTE_C5, 2400},
+
+    {NOTE_REST, 800}, {NOTE_E4, 800}, {NOTE_D4, 800}, {NOTE_C4, 800}, {NOTE_G4, 800}, {NOTE_C4, 800}, {NOTE_D4, 800}, {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 800}, {NOTE_F4, 800},
+    {NOTE_E4, 800}, {NOTE_D4, 800}, {NOTE_C4, 800}, {NOTE_D4, 800}, {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_E4, 800}, {NOTE_D4, 800}, {NOTE_C4, 800}, {NOTE_G4, 800},
+    {NOTE_E4, 800}, {NOTE_D4, 800}, {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 800}, {NOTE_F4, 800}, {NOTE_E4, 800}, {NOTE_D4, 800},
+    {NOTE_E4, 800}, {NOTE_D4, 800}, {NOTE_E4, 800}, {NOTE_F4, 800},
+    {NOTE_E4, 800}, {NOTE_D4, 800}, {NOTE_C4, 800}, {NOTE_G4, 800}, {NOTE_C4, 800}, {NOTE_D4, 800}, {NOTE_E4, 800}, {NOTE_F4, 800}, {NOTE_G4, 800}, {NOTE_F4, 800}, {NOTE_E4, 800}, {NOTE_D4, 800}
+};
+#endif
 
 // Song table
 static const struct {
     const struct note_duration *notes;
     size_t count;
 } songs[SONG_COUNT] = {
+#ifdef CONFIG_SONG_TWINKLE_STAR_ENABLE
     [SONG_TWINKLE_STAR] = {twinkle_star, ARRAY_SIZE(twinkle_star)},
+#else
+    [SONG_TWINKLE_STAR] = {NULL, 0},
+#endif
+#ifdef CONFIG_SONG_HAPPY_BIRTHDAY_ENABLE
     [SONG_HAPPY_BIRTHDAY] = {happy_birthday, ARRAY_SIZE(happy_birthday)},
+#else
+    [SONG_HAPPY_BIRTHDAY] = {NULL, 0},
+#endif
+#ifdef CONFIG_SONG_BEEP_TEST_ENABLE
     [SONG_BEEP_TEST] = {beep_test, ARRAY_SIZE(beep_test)},
+#else
+    [SONG_BEEP_TEST] = {NULL, 0},
+#endif
+#ifdef CONFIG_SONG_GAME_OF_THRONES_ENABLE
     [SONG_GAME_OF_THRONES] = {game_of_thrones, ARRAY_SIZE(game_of_thrones)},
+#else
+    [SONG_GAME_OF_THRONES] = {NULL, 0},
+#endif
+#ifdef CONFIG_SONG_SUPER_MARIO_ENABLE
     [SONG_SUPER_MARIO] = {super_mario, ARRAY_SIZE(super_mario)},
+#else
+    [SONG_SUPER_MARIO] = {NULL, 0},
+#endif
+#ifdef CONFIG_SONG_MAX_VERSTAPPEN_ENABLE
     [SONG_MAX_VERSTAPPEN] = {max_verstappen, ARRAY_SIZE(max_verstappen)},
+#else
+    [SONG_MAX_VERSTAPPEN] = {NULL, 0},
+#endif
+#ifdef CONFIG_SONG_PIRATES_CARIBBEAN_ENABLE
     [SONG_PIRATES_CARIBBEAN] = {pirates_caribbean, ARRAY_SIZE(pirates_caribbean)},
+#else
+    [SONG_PIRATES_CARIBBEAN] = {NULL, 0},
+#endif
+#ifdef CONFIG_SONG_GALA_ENABLE
+    [SONG_GALA] = {song_gala, ARRAY_SIZE(song_gala)},
+#else
+    [SONG_GALA] = {NULL, 0},
+#endif
 };
 
 // Play a single note
@@ -316,7 +409,14 @@ static void play_note(int frequency, int duration_ms)
     k_msleep(50); // Small gap between notes
 }
 
-// Play song interface function
+/**
+ * @brief Play a song with specified speed and pitch multipliers.
+ * 
+ * @param song The song type to play.
+ * @param speed_multiplier 
+ * @param pitch_multiplier 
+ * @return int 
+ */
 int play_song(enum song_type song, double speed_multiplier, double pitch_multiplier)
 {
     if (song >= SONG_COUNT) {
@@ -365,8 +465,54 @@ int main(void)
 
     printk("Music player started (PWM channel %d)\n", BUZZER_PWM_CHANNEL);
 
-    // Play Pirates of the Caribbean theme at 1.25x speed and 2.0x pitch (one octave higher)
+    // 逐个播放所有歌曲
+#ifdef CONFIG_SONG_TWINKLE_STAR_ENABLE
+    printk("Playing song %d\n", SONG_TWINKLE_STAR);
+    play_song(SONG_TWINKLE_STAR, 1.0, 1.0);
+    k_msleep(1000);
+#endif
+
+#ifdef CONFIG_SONG_HAPPY_BIRTHDAY_ENABLE
+    printk("Playing song %d\n", SONG_HAPPY_BIRTHDAY);
+    play_song(SONG_HAPPY_BIRTHDAY, 1.0, 1.0);
+    k_msleep(1000);
+#endif
+
+#ifdef CONFIG_SONG_BEEP_TEST_ENABLE
+    printk("Playing song %d\n", SONG_BEEP_TEST);
+    play_song(SONG_BEEP_TEST, 1.0, 1.0);
+    k_msleep(1000);
+#endif
+
+#ifdef CONFIG_SONG_GAME_OF_THRONES_ENABLE
+    printk("Playing song %d\n", SONG_GAME_OF_THRONES);
+    play_song(SONG_GAME_OF_THRONES, 1.0, 1.0);
+    k_msleep(1000);
+#endif
+
+#ifdef CONFIG_SONG_SUPER_MARIO_ENABLE
+    printk("Playing song %d\n", SONG_SUPER_MARIO);
+    play_song(SONG_SUPER_MARIO, 1.0, 1.0);
+    k_msleep(1000);
+#endif
+
+#ifdef CONFIG_SONG_MAX_VERSTAPPEN_ENABLE
+    printk("Playing song %d\n", SONG_MAX_VERSTAPPEN);
+    play_song(SONG_MAX_VERSTAPPEN, 1.0, 1.0);
+    k_msleep(1000);
+#endif
+
+#ifdef CONFIG_SONG_PIRATES_CARIBBEAN_ENABLE
+    printk("Playing song %d\n", SONG_PIRATES_CARIBBEAN);
     play_song(SONG_PIRATES_CARIBBEAN, 1.25, 2.0);
+    k_msleep(1000);
+#endif
+
+#ifdef CONFIG_SONG_GALA_ENABLE
+    printk("Playing song %d\n", SONG_GALA);
+    play_song(SONG_GALA, 1.0, 1.0);
+    k_msleep(1000);
+#endif
 
     return 0;
 }

@@ -1,5 +1,56 @@
 # Copyright (c) 2024 TOKITA Hiroshi
 # SPDX-License-Identifier: Apache-2.0
 
-
 source "Kconfig.zephyr"
+
+menu "Buzzer Configuration"
+
+config SONG_TWINKLE_STAR_ENABLE
+	bool "Enable Twinkle Star Song"
+	default y
+	help
+	  Enable or disable the compilation of the Twinkle Star song.
+
+config SONG_HAPPY_BIRTHDAY_ENABLE
+	bool "Enable Happy Birthday Song"
+	default y
+	help
+	  Enable or disable the compilation of the Happy Birthday song.
+
+config SONG_BEEP_TEST_ENABLE
+	bool "Enable Beep Test Song"
+	default y
+	help
+	  Enable or disable the compilation of the Beep Test song.
+
+config SONG_GAME_OF_THRONES_ENABLE
+	bool "Enable Game of Thrones Song"
+	default y
+	help
+	  Enable or disable the compilation of the Game of Thrones song.
+
+config SONG_SUPER_MARIO_ENABLE
+	bool "Enable Super Mario Song"
+	default y
+	help
+	  Enable or disable the compilation of the Super Mario song.
+
+config SONG_MAX_VERSTAPPEN_ENABLE
+	bool "Enable Max Verstappen Song"
+	default y
+	help
+	  Enable or disable the compilation of the Max Verstappen song.
+
+config SONG_PIRATES_CARIBBEAN_ENABLE
+	bool "Enable Pirates of the Caribbean Song"
+	default y
+	help
+	  Enable or disable the compilation of the Pirates of the Caribbean song.
+
+config SONG_GALA_ENABLE
+	bool "Enable Gala Song"
+	default y
+	help
+	  Enable or disable the compilation of the Gala song.
+
+endmenu
