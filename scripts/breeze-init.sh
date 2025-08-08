@@ -23,10 +23,14 @@ pip install west
 # install breeze
 west init -m https://github.com/RobotPilots-SZU/breeze.git .
 west update
-
-#install pip package dependencies
-west packages pip --install
 source breeze-sdk/zephyr/zephyr-env.sh
+
+# install pip package dependencies
+west packages pip --install
+
+# install toolchain
+west sdk install --install-dir breeze-sdk/toolchain \
+     --toolchains arm-zephyr-eabi
 
 # copy environment initial file
 cp breeze/scripts/env.sh env.sh
