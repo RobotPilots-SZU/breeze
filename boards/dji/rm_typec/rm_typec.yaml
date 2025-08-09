@@ -1,5 +1,5 @@
 identifier: rm_typec
-name: DJI RoboMaster Type-C Development Board
+name: DJI RoboMaster Type-C Board
 type: mcu
 arch: arm
 toolchain:

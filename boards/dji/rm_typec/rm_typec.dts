@@ -5,7 +5,7 @@
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 / {
-    model = "DJI C Dev Board";
+    model = "DJI RoboMaster Type-C Board";
     compatible = "dji,c-board";
 
     chosen {
@@ -65,14 +65,6 @@
             zephyr,code = <INPUT_KEY_0>;
         };
     };
-
-    // sensor_fusion: fusion {
-    // 	status = "okay";
-    // 	compatible = "zephyr,sensor-fusion-ahrs";
-    // 	accel-dev = <&bmi08x_accel>; /* Accelerometer device phandle */
-    // 	gyro-dev = <&bmi08x_gyro>; /* Gyroscope device phandle */
-    // 	/* magn-dev = <&magn0>; */ /* Magnetometer device phandle - not available */
-    // };
 
     aliases {
         led0 = &red_led;
