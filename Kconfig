@@ -48,3 +48,10 @@ menuconfig BREEZE
     select LOG_TIMESTAMP_USE_REALTIME
     help
         Enable logging support in Breeze.
+
+    config BREEZE_EXTERNAL_LIB
+    bool "Enable external libraries that breeze required"
+    default y
+    select ETL
+    help
+        Enable external libraries that breeze required
