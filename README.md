@@ -58,6 +58,11 @@
 
 12. 启动VSCode `code breeze-app/[app-folder]` , 将 `[app-folder]` 替换为需要打开的项目, 开始进行App开发.
 
+13. vscode配置文件使用：https://vscode.dev/profile/github/229eb7791a0dc0aacec73019ea58aa22 
+
+14. 以达妙主控为例, 进入例程app工作空间 `cd /breeze-workspace/breeze-app/breeze-app-template`：
+    (1)命令行编译：使用 ` west build -b damiao_mc02` 编译例程, `damiao_mc02` 指向同名的设备树文件, `west boards` 可以列出全部板子
+    (2)vscode编译：`code .` 打开vscode, 进入工作空间, 内部设置好了编译任务, 使用 `ctrl+shift+b` 进行编译
 ## 文件结构
 
 如下所示为一个breeze工作区的文件目录结构:
