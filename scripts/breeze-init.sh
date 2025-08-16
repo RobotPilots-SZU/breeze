@@ -33,4 +33,4 @@ west sdk install --install-dir breeze-sdk/toolchain \
      --toolchains arm-zephyr-eabi
 
 # copy environment initial file
-cp breeze/scripts/env.sh env.sh
+cp -s breeze/scripts/env.sh env.sh
