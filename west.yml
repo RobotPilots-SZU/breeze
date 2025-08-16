@@ -29,6 +29,8 @@ manifest:
           - segger
           - hal_st
           - hal_stm32
+          - fatfs
+          - littlefs
 
   self:
     path: breeze
