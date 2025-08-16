@@ -31,6 +31,7 @@ manifest:
           - hal_stm32
           - fatfs
           - littlefs
+          - picolibc
 
   self:
     path: breeze
