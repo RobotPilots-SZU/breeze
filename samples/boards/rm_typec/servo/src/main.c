@@ -12,55 +12,71 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/pwm.h>
+#include <zephyr/drivers/gpio.h>
 
 static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(DT_NODELABEL(servo0));
+static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(DT_NODELABEL(user_button), gpios);
+
 static const uint32_t min_pulse = PWM_MSEC(0.5);
 static const uint32_t max_pulse = PWM_MSEC(2.5);
 
-#define STEP PWM_USEC(100)
-
-enum direction {
-	DOWN,
-	UP,
-};
+#define GEAR_COUNT 5
+#define STEP ((max_pulse - min_pulse) / (GEAR_COUNT - 1))
 
 int main(void)
 {
 	uint32_t pulse_width = min_pulse;
-	enum direction dir = UP;
+	int current_gear = 0;
 	int ret;
+	bool button_pressed = false;
+	bool last_button_state = false;
 
-	printk("Servomotor control\n");
+	printk("Servomotor control with %d gears\n", GEAR_COUNT);
 
 	if (!pwm_is_ready_dt(&servo)) {
 		printk("Error: PWM device %s is not ready\n", servo.dev->name);
 		return 0;
 	}
 
+	if (!gpio_is_ready_dt(&button)) {
+		printk("Error: GPIO device %s is not ready\n", button.port->name);
+		return 0;
+	}
+
+	ret = gpio_pin_configure_dt(&button, GPIO_INPUT);
+	if (ret < 0) {
+		printk("Error %d: failed to configure button GPIO\n", ret);
+		return 0;
+	}
+
+	// Set initial position
+	ret = pwm_set_pulse_dt(&servo, pulse_width);
+	if (ret < 0) {
+		printk("Error %d: failed to set initial pulse width\n", ret);
+		return 0;
+	}
+
+	printk("Gear %d: pulse width %d us\n", current_gear + 1, pulse_width);
+
 	while (1) {
-		ret = pwm_set_pulse_dt(&servo, pulse_width);
-		if (ret < 0) {
-			printk("Error %d: failed to set pulse width\n", ret);
-			return 0;
+		button_pressed = !gpio_pin_get_dt(&button); // Button is active low
+
+		// Detect button press (edge detection)
+		if (button_pressed && !last_button_state) {
+			current_gear = (current_gear + 1) % GEAR_COUNT;
+			pulse_width = min_pulse + (current_gear * STEP);
+
+			ret = pwm_set_pulse_dt(&servo, pulse_width);
+			if (ret < 0) {
+				printk("Error %d: failed to set pulse width\n", ret);
+				return 0;
+			}
+
+			printk("Gear %d: pulse width %d us\n", current_gear + 1, pulse_width);
 		}
 
-		if (dir == DOWN) {
-			if (pulse_width <= min_pulse) {
-				dir = UP;
-				pulse_width = min_pulse;
-			} else {
-				pulse_width -= STEP;
-			}
-		} else {
-			pulse_width += STEP;
-
-			if (pulse_width >= max_pulse) {
-				dir = DOWN;
-				pulse_width = max_pulse;
-			}
-		}
-
-		k_sleep(K_SECONDS(1));
+		last_button_state = button_pressed;
+		k_sleep(K_MSEC(50)); // Debounce delay
 	}
 	return 0;
 }
