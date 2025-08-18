@@ -27,9 +27,22 @@ struct motor_feedback {
     uint8_t motor_id;             // 电机ID (从CAN ID计算得出)
 };
 
+/* 接收统计结构体 */
+struct can_rx_stats {
+    uint32_t packet_count;         // 接收包计数
+    struct motor_feedback latest_feedback;  // 最新的反馈数据
+    int64_t last_output_time;     // 上次输出时间
+    int64_t first_packet_time;    // 第一个包的时间
+    bool has_valid_data;          // 是否有有效数据
+};
+
 /* CAN设备获取 */
 const struct device *const can1_dev = DEVICE_DT_GET(DT_NODELABEL(can1));
 const struct device *const can2_dev = DEVICE_DT_GET(DT_NODELABEL(can2));
+
+/* 接收统计变量 */
+static struct can_rx_stats can1_stats = {0};
+static struct can_rx_stats can2_stats = {0};
 
 /* 发送回调函数 */
 void tx_irq_callback(const struct device *dev, int error, void *arg)
@@ -83,20 +96,35 @@ void can1_rx_callback(const struct device *dev, struct can_frame *frame, void *u
     ARG_UNUSED(dev);
     ARG_UNUSED(user_data);
     
-    /* 跳过RTR帧 */
-    if ((frame->flags & CAN_FRAME_RTR) != 0U) {
-        return;
-    }
-    
     /* 尝试解包电机反馈数据 */
     if (unpack_motor_feedback(frame, &feedback) == 0) {
-        LOG_INF("CAN1 Motor[%d] Feedback - ID:0x%03X, Angle:%d, Speed:%d rpm, Current:%d mA, Temp:%d°C",
-                feedback.motor_id,
-                frame->id,
-                feedback.mechanical_angle,
-                feedback.speed_rpm,
-                feedback.actual_current,
-                feedback.temperature);
+        can1_stats.packet_count++;
+        can1_stats.latest_feedback = feedback;
+        can1_stats.has_valid_data = true;
+        
+        /* 记录第一个包的时间 */
+        if (can1_stats.packet_count == 1) {
+            can1_stats.first_packet_time = k_uptime_get();
+        }
+        
+        if (can1_stats.packet_count % 30 == 0) {
+            int64_t current_time = k_uptime_get();
+            int64_t time_diff = current_time - can1_stats.first_packet_time;
+            uint32_t frequency = 0;
+            
+            if (time_diff > 0) {
+                frequency = (uint32_t)(can1_stats.packet_count * 1000 / time_diff);
+            }
+            
+            LOG_INF("CAN1 [%d packets] Motor[%d] - Angle:%d, Speed:%d rpm, Current:%d mA, Temp:%d°C, Freq:%d Hz",
+                    can1_stats.packet_count,
+                    can1_stats.latest_feedback.motor_id,
+                    can1_stats.latest_feedback.mechanical_angle,
+                    can1_stats.latest_feedback.speed_rpm,
+                    can1_stats.latest_feedback.actual_current,
+                    can1_stats.latest_feedback.temperature,
+                    frequency);
+        }
     } else {
         LOG_DBG("CAN1 received non-motor message: ID=0x%03X", frame->id);
     }
@@ -115,20 +143,35 @@ void can2_rx_callback(const struct device *dev, struct can_frame *frame, void *u
     ARG_UNUSED(dev);
     ARG_UNUSED(user_data);
     
-    /* 跳过RTR帧 */
-    if ((frame->flags & CAN_FRAME_RTR) != 0U) {
-        return;
-    }
-    
     /* 尝试解包电机反馈数据 */
     if (unpack_motor_feedback(frame, &feedback) == 0) {
-        LOG_INF("CAN2 Motor[%d] Feedback - ID:0x%03X, Angle:%d, Speed:%d rpm, Current:%d mA, Temp:%d°C",
-                feedback.motor_id,
-                frame->id,
-                feedback.mechanical_angle,
-                feedback.speed_rpm,
-                feedback.actual_current,
-                feedback.temperature);
+        can2_stats.packet_count++;
+        can2_stats.latest_feedback = feedback;
+        can2_stats.has_valid_data = true;
+        
+        /* 记录第一个包的时间 */
+        if (can2_stats.packet_count == 1) {
+            can2_stats.first_packet_time = k_uptime_get();
+        }
+        
+        if (can2_stats.packet_count % 30 == 0) {
+            int64_t current_time = k_uptime_get();
+            int64_t time_diff = current_time - can2_stats.first_packet_time;
+            uint32_t frequency = 0;
+            
+            if (time_diff > 0) {
+                frequency = (uint32_t)(can2_stats.packet_count * 1000 / time_diff);
+            }
+            
+            LOG_INF("CAN2 [%d packets] Motor[%d] - Angle:%d, Speed:%d rpm, Current:%d mA, Temp:%d°C, Freq:%d Hz",
+                    can2_stats.packet_count,
+                    can2_stats.latest_feedback.motor_id,
+                    can2_stats.latest_feedback.mechanical_angle,
+                    can2_stats.latest_feedback.speed_rpm,
+                    can2_stats.latest_feedback.actual_current,
+                    can2_stats.latest_feedback.temperature,
+                    frequency);
+        }
     } else {
         LOG_DBG("CAN2 received non-motor message: ID=0x%03X", frame->id);
     }
@@ -173,6 +216,7 @@ int send_motor_control(const struct device *dev,
 int main(void)
 {
     int ret;
+    struct can_filter filter;             // CAN过滤器
     
     /* 检查CAN设备就绪状态 */
     if (!device_is_ready(can1_dev)) {
@@ -196,6 +240,29 @@ int main(void)
     if (ret != 0) {
         LOG_ERR("Failed to start CAN2: %d", ret);
         return -1;
+    }
+
+        /* 配置CAN接收过滤器和回调函数 */
+    LOG_INF("Configuring CAN RX filters and callbacks");
+
+    /* 设置CAN1接收过滤器 - 接收所有消息 */
+    filter.id = 0;
+    filter.mask = 0;
+    filter.flags = 0;
+
+    ret = can_add_rx_filter(can1_dev, can1_rx_callback, NULL, &filter);
+    if (ret < 0) {
+        LOG_ERR("Failed to add CAN1 RX filter: %d", ret);
+    } else {
+        LOG_INF("CAN1 RX filter added successfully");
+    }
+
+    /* 设置CAN2接收过滤器 - 接收所有消息 */
+    ret = can_add_rx_filter(can2_dev, can2_rx_callback, NULL, &filter);
+    if (ret < 0) {
+        LOG_ERR("Failed to add CAN2 RX filter: %d", ret);
+    } else {
+        LOG_INF("CAN2 RX filter added successfully");
     }
     
     LOG_INF("RM6020 Motor Control System Started");
