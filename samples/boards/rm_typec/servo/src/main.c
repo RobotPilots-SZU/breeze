@@ -14,14 +14,27 @@
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/drivers/gpio.h>
 
-static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(DT_NODELABEL(servo0));
+#define GEAR_COUNT 8
+#define STEP ((max_pulse - min_pulse) / (GEAR_COUNT - 1))
+
+// 提取舵机的 pwm_dt_spec
+#define GET_SERVO_PWM_SPEC(node_id) \
+    PWM_DT_SPEC_GET(node_id),
+
+// 获取父节点路径
+#define SERVO_PWM_NODE_ID DT_PATH(pwmservo)
+
+// 动态生成舵机数组
+static const struct pwm_dt_spec servos[] = {
+    DT_FOREACH_CHILD(SERVO_PWM_NODE_ID, GET_SERVO_PWM_SPEC)
+};
+
 static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(DT_NODELABEL(user_button), gpios);
+
+#define NUM_SERVOS ARRAY_SIZE(servos)
 
 static const uint32_t min_pulse = PWM_MSEC(0.5);
 static const uint32_t max_pulse = PWM_MSEC(2.5);
-
-#define GEAR_COUNT 5
-#define STEP ((max_pulse - min_pulse) / (GEAR_COUNT - 1))
 
 int main(void)
 {
@@ -31,11 +44,15 @@ int main(void)
 	bool button_pressed = false;
 	bool last_button_state = false;
 
-	printk("Servomotor control with %d gears\n", GEAR_COUNT);
+	printk("Servomotor control with %d gears, %d servos detected\n", GEAR_COUNT, NUM_SERVOS);
 
-	if (!pwm_is_ready_dt(&servo)) {
-		printk("Error: PWM device %s is not ready\n", servo.dev->name);
-		return 0;
+	// Check all servos are ready
+	for (int i = 0; i < NUM_SERVOS; i++) {
+		if (!pwm_is_ready_dt(&servos[i])) {
+			printk("Warning: Servo %d PWM device is not ready\n", i);
+		} else {
+			printk("Servo %d ready\n", i);
+		}
 	}
 
 	if (!gpio_is_ready_dt(&button)) {
@@ -49,14 +66,18 @@ int main(void)
 		return 0;
 	}
 
-	// Set initial position
-	ret = pwm_set_pulse_dt(&servo, pulse_width);
-	if (ret < 0) {
-		printk("Error %d: failed to set initial pulse width\n", ret);
-		return 0;
+	// Set initial position for all servos
+	for (int i = 0; i < NUM_SERVOS; i++) {
+		if (pwm_is_ready_dt(&servos[i])) {
+			ret = pwm_set_pulse_dt(&servos[i], pulse_width);
+			if (ret < 0) {
+				printk("Error %d: failed to set initial pulse width for servo %d\n", ret, i);
+				return 0;
+			}
+		}
 	}
 
-	printk("Gear %d: pulse width %d us\n", current_gear + 1, pulse_width);
+	printk("All servos, Gear %d: pulse width %d us\n", current_gear + 1, pulse_width);
 
 	while (1) {
 		button_pressed = !gpio_pin_get_dt(&button); // Button is active low
@@ -66,13 +87,18 @@ int main(void)
 			current_gear = (current_gear + 1) % GEAR_COUNT;
 			pulse_width = min_pulse + (current_gear * STEP);
 
-			ret = pwm_set_pulse_dt(&servo, pulse_width);
-			if (ret < 0) {
-				printk("Error %d: failed to set pulse width\n", ret);
-				return 0;
+			// Update all servos
+			for (int i = 0; i < NUM_SERVOS; i++) {
+				if (pwm_is_ready_dt(&servos[i])) {
+					ret = pwm_set_pulse_dt(&servos[i], pulse_width);
+					if (ret < 0) {
+						printk("Error %d: failed to set pulse width for servo %d\n", ret, i);
+						return 0;
+					}
+				}
 			}
 
-			printk("Gear %d: pulse width %d us\n", current_gear + 1, pulse_width);
+			printk("All servos, Gear %d: pulse width %d us\n", current_gear + 1, pulse_width);
 		}
 
 		last_button_state = button_pressed;
