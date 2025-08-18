@@ -51,9 +51,35 @@
     pwmbuzzer {
         status = "okay";
         compatible = "pwm-leds";
-        buzzer: buzzer_pwm {
+        buzzer_pwm: buzzer_pwm {
             pwms = <&pwm4 3 PWM_MSEC(1) PWM_POLARITY_NORMAL>; // TIM4_CH3 PD14
             label = "buzzer";
+        };
+    };
+
+    pwmservo: pwmservo {
+        compatible = "pwm-leds";
+        status = "okay";
+        servo0: servo0 {
+            pwms = <&pwm1 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>; // TIM1_CH1 PE9
+        };
+        servo1: servo1 {
+            pwms = <&pwm1 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>; // TIM1_CH2 PE11
+        };
+        servo2: servo2 {
+            pwms = <&pwm1 3 PWM_MSEC(20) PWM_POLARITY_NORMAL>; // TIM1_CH3 PE13
+        };
+        servo3: servo3 {
+            pwms = <&pwm1 4 PWM_MSEC(20) PWM_POLARITY_NORMAL>; // TIM1_CH4 PE14
+        };
+        servo4: servo4 {
+            pwms = <&pwm8 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>; // TIM8_CH1 PC6
+        };
+        servo5: servo5 {
+            pwms = <&pwm8 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>; // TIM8_CH2 PI6
+        };
+        servo6: servo6 {
+            pwms = <&pwm8 3 PWM_MSEC(20) PWM_POLARITY_NORMAL>; // TIM8_CH3 PI7
         };
     };
 
@@ -77,7 +103,14 @@
         pwm-led0 = &red_pwm_led;
         pwm-led1 = &green_pwm_led;
         pwm-led2 = &blue_pwm_led;
-        buzzer0 = &buzzer;
+        buzzer0 = &buzzer_pwm;
+        servo0 = &servo0;
+        servo1 = &servo1;
+        servo2 = &servo2;
+        servo3 = &servo3;
+        servo4 = &servo4;
+        servo5 = &servo5;
+        servo6 = &servo6;
         accel0 = &bmi08x_accel;
         gyro0 = &bmi08x_gyro;
     };
@@ -191,7 +224,25 @@ zephyr_udc0: &usbotg_fs {
     };
 };
 
+&timers1 {
+    st,prescaler = <167>; // 1 MHz timer clock
+    status = "okay";
+    pwm1: pwm {
+        status = "okay";
+        pinctrl-0 = <&tim1_ch1_pe9 &tim1_ch2_pe11 &tim1_ch3_pe13 &tim1_ch4_pe14>;
+        pinctrl-names = "default";
+    };
+};
 
+&timers8 {
+    st,prescaler = <167>; // 1 MHz timer clock
+    status = "okay";
+    pwm8: pwm {
+        status = "okay";
+        pinctrl-0 = <&tim8_ch1_pc6 &tim8_ch2_pi6 &tim8_ch3_pi7>;
+        pinctrl-names = "default";
+    };
+};
 
 &plli2s {
     /* Minimize audio clock error (with i2s mck-enabled) for all of:
