@@ -10,13 +10,9 @@ LOG_MODULE_REGISTER(rm6020_motor_control, LOG_LEVEL_INF);
 
 /* 电机控制相关定义 */
 #define MOTOR_CONTROL_ID 0x1FF          // 电机控制标识符
-#define MOTOR_VOLTAGE_MAX 16384         // 最大电压值 (对应满功率)
-#define MOTOR_VOLTAGE_MIN -16384        // 最小电压值
 
 /* 电机反馈相关定义 */
 #define MOTOR_FEEDBACK_BASE_ID 0x204    // 电机反馈基础ID (0x204 + 驱动器ID)
-#define MOTOR_FEEDBACK_FREQ_HZ 1000     // 反馈频率 1KHz
-#define MOTOR_ANGLE_RANGE 8191          // 机械角度值范围 0~8191
 
 /* 电机反馈数据结构体 */
 struct motor_feedback {
@@ -206,9 +202,6 @@ int send_motor_control(const struct device *dev,
     frame.data[7] = motor4_voltage & 0xFF;         // 电机4电压给定值低8位
     
     int ret = can_send(dev, &frame, K_MSEC(100), tx_irq_callback, NULL);
-    if (ret != 0) {
-        LOG_ERR("Failed to send motor control frame: %d", ret);
-    }
     
     return ret;
 }
@@ -266,8 +259,6 @@ int main(void)
     }
     
     LOG_INF("RM6020 Motor Control System Started");
-    LOG_INF("Motor feedback frequency: %d Hz", MOTOR_FEEDBACK_FREQ_HZ);
-    LOG_INF("Motor angle range: 0-%d", MOTOR_ANGLE_RANGE);
     
     int16_t target_vol = 16000;
     
@@ -276,7 +267,7 @@ int main(void)
         /* CAN1发送电机控制指令 - 控制电机1和2 */
         send_motor_control(can1_dev, target_vol, target_vol, target_vol, target_vol);
         /* CAN2发送电机控制指令 - 控制电机3和4 */
-        // send_motor_control(can2_dev, target_vol, target_vol, target_vol, target_vol);
+        send_motor_control(can2_dev, target_vol, target_vol, target_vol, target_vol);
         k_sleep(K_MSEC(1));
     }
     
