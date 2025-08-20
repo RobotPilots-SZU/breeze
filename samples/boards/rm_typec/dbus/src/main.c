@@ -5,7 +5,7 @@
 #include <zephyr/sys/printk.h>
 #include <string.h>
 
-LOG_MODULE_REGISTER(dbus_dma, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(dbus_dma, LOG_LEVEL_INF);
 
 #define DBUS_UART_NODE DT_ALIAS(dbus)
 #define DBUS_PACKET_SIZE 18
@@ -36,6 +36,7 @@ typedef struct {
 static const struct device *dbus_uart = DEVICE_DT_GET(DBUS_UART_NODE);
 static uint8_t rx_buffer[DBUS_PACKET_SIZE];
 static rc_base_info_t rc_info = {0};
+static bool rx_enabled = false;
 
 /* 调试变量 */
 static uint8_t test_s1, test_s2;
@@ -124,24 +125,7 @@ void dbus_packet_received_callback(uint8_t *buffer, size_t length)
 {
     /* 解析DBUS数据包 */
     rc_base_info_update(&rc_info, buffer);
-    
-    /* 打印解析后的数据 */
-    printk("=== DBUS Data ===\n");
-    printk("Channels: CH0=%d CH1=%d CH2=%d CH3=%d\n", 
-            rc_info.ch0, rc_info.ch1, rc_info.ch2, rc_info.ch3);
-    printk("Switches: S1=%d S2=%d (raw: S1=%d S2=%d)\n", 
-            rc_info.s1.value, rc_info.s2.value, test_s1, test_s2);
-    // printk("Mouse: VX=%d VY=%d VZ=%d L=%d R=%d\n", 
-    //         rc_info.mouse_vx, rc_info.mouse_vy, rc_info.mouse_vz,
-    //         rc_info.mouse_btn_l.value, rc_info.mouse_btn_r.value);
-    // printk("Keys: W=%d S=%d A=%d D=%d Shift=%d Ctrl=%d Q=%d E=%d\n",
-    //         rc_info.W.value, rc_info.S.value, rc_info.A.value, rc_info.D.value,
-    //         rc_info.Shift.value, rc_info.Ctrl.value, rc_info.Q.value, rc_info.E.value);
-    // printk("Keys2: R=%d F=%d G=%d Z=%d X=%d C=%d V=%d B=%d\n",
-    //         rc_info.R.value, rc_info.F.value, rc_info.G.value, rc_info.Z.value,
-    //         rc_info.X.value, rc_info.C.value, rc_info.V.value, rc_info.B.value);
-    printk("Thumbwheel: %d\n", rc_info.thumbwheel.value);
-    printk("================\n");
+    LOG_DBG("Parse DBUS Data");
 }
 
 /**
@@ -153,32 +137,30 @@ static void uart_rx_callback(const struct device *dev, struct uart_event *evt, v
     case UART_RX_RDY:
         /* 检查是否收到完整包 */
         LOG_DBG("UART RX OFFSET: %d, LENGTH: %d", evt->data.rx.offset, evt->data.rx.len);
-        if (evt->data.rx.len + evt->data.rx.offset == DBUS_PACKET_SIZE) {
+        if (evt->data.rx.len == DBUS_PACKET_SIZE) {
             dbus_packet_received_callback(evt->data.rx.buf, DBUS_PACKET_SIZE);
         } else {
-            LOG_WRN("Incomplete packet: %d bytes", evt->data.rx.len);
+            LOG_WRN("Incomplete packet: %d bytes, restarting reception", evt->data.rx.len);
         }
-        break;
+        uart_rx_disable(dev);
         
+        break;
+
     case UART_RX_BUF_REQUEST:
-        /* 继续使用同一缓冲区 */
-        uart_rx_buf_rsp(dev, rx_buffer, DBUS_PACKET_SIZE);
+        LOG_INF("UART_RX_BUF_REQUEST received");
         break;
-        
+    
     case UART_RX_BUF_RELEASED:
-        LOG_DBG("Buffer released");
+        LOG_INF("UART_RX_BUF_RELEASED received");
         break;
-        
+    
     case UART_RX_DISABLED:
-        LOG_DBG("UART RX disabled");
-        /* 重新启动接收 */
-        uart_rx_enable(dev, rx_buffer, DBUS_PACKET_SIZE, DBUS_TIMEOUT_MS);
+        LOG_INF("UART_RX_DISABLED received");
+        uart_rx_enable(dbus_uart, rx_buffer, DBUS_PACKET_SIZE, DBUS_TIMEOUT_MS);
         break;
-        
+    
     case UART_RX_STOPPED:
-        LOG_DBG("UART RX stopped due to timeout or error");
-        /* 重新启动接收 */
-        uart_rx_enable(dev, rx_buffer, DBUS_PACKET_SIZE, DBUS_TIMEOUT_MS);
+        LOG_ERR("UART_RX_STOPPED received");
         break;
         
     default:
@@ -214,7 +196,8 @@ static int dbus_init(void)
         LOG_ERR("Failed to enable UART RX: %d", ret);
         return ret;
     }
-    
+    rx_enabled = true;
+
     LOG_INF("DBUS packet reception initialized successfully");
     return 0;
 }
