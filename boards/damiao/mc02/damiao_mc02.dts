@@ -168,7 +168,7 @@
 &usart2 {
     // RS485
     status = "okay";
-    pinctrl-0 = <&usart3_de_pb14 &usart2_rx_pd6 &usart2_tx_pd5>;
+    pinctrl-0 = <&usart2_de_pd4 &usart2_rx_pd6 &usart2_tx_pd5>;
     pinctrl-names = "default";
     de-enable;
 };
