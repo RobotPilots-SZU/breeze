@@ -1,17 +1,20 @@
 /*
  * Copyright (c) 2025 RobotPilots-SZU
  * SPDX-License-Identifier: Apache-2.0
+ * author: Morthine,Sassinak
  */
 
+/* reference: zephyr/boards/st/nucleo_h723zg/nucleo_h723zg.dts */
 /dts-v1/;
 
-#include <st/h7/stm32h723Xg.dtsi>
-#include <st/h7/stm32h723vgtx-pinctrl.dtsi>
+#include <st/h7/stm32h723Xg.dtsi>                               // 描述芯片的soc，内存地址信息
+#include <st/h7/stm32h723vgtx-pinctrl.dtsi>                     // 描述芯片的引脚封装
 
 #include <zephyr/dt-bindings/spi/spi.h>
 #include <zephyr/dt-bindings/led/led.h>
-#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/input/input-event-codes.h>         // 定义设备的输入事件码，比如按键
 
+// 根节点中只需要描述板子特有的硬件功能，在喵板中只有一个用户按键
 / {
     model = "Shenzhen Damiao Tech. MC-02 board";
     compatible = "damiao,mc02";
@@ -32,7 +35,7 @@
     };
 
     aliases {
-        sw0 = &user_button;
+        sw0 = &user_button;        // switch 0,官方推荐用名,参考：https://docs.zephyrproject.org/latest/samples/basic/button/README.html
     };
 };
 
@@ -165,9 +168,26 @@
     };
 };
 
+/*---------------------usart config start----------------------------*/
+
+&usart1 {
+    status = "okay";
+    current-speed = <115200>;
+    stop-bits = "1";
+    data-bits = <8>;
+    parity = "none";
+    pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+    pinctrl-names = "default";
+    fifo-enable;
+};
+
 &usart2 {
     // RS485
     status = "okay";
+    current-speed = <115200>;
+    stop-bits = "1";
+    data-bits = <8>;
+    parity = "none";
     pinctrl-0 = <&usart2_de_pd4 &usart2_rx_pd6 &usart2_tx_pd5>;
     pinctrl-names = "default";
     de-enable;
@@ -176,6 +196,10 @@
 &usart3 {
     // RS485
     status = "okay";
+    current-speed = <115200>;
+    stop-bits = "1";
+    data-bits = <8>;
+    parity = "none";
     pinctrl-0 = <&usart3_de_pb14 &usart3_rx_pd9 &usart3_tx_pd8>;
     pinctrl-names = "default";
     de-enable;
@@ -184,18 +208,25 @@
 &uart5 {
     // SBUS
     status = "okay";
-    pinctrl-0 = <&uart5_rx_pd2 &uart5_tx_pc12>;
-    pinctrl-names = "default";
     current-speed = <100000>;
     data-bits = <8>;
     stop-bits = "2";
+    pinctrl-0 = <&uart5_rx_pd2 &uart5_tx_pc12>;
+    pinctrl-names = "default";
 };
 
 &usart10 {
     status = "okay";
+    current-speed = <115200>;
+    stop-bits = "1";
+    data-bits = <8>;
+    parity = "none";
     pinctrl-0 = <&usart10_rx_pe2 &usart10_tx_pe3>;
     pinctrl-names = "default";
 };
+
+/*---------------------usart config end----------------------------*/
+
 
 &fdcan1 {
     status = "okay";
