@@ -1,0 +1,15 @@
+# Copyright (c) 2025 RobotPilots
+# SPDX-License-Identifier: Apache-2.0
+
+config MLT5020_BUZZER_PWM
+    bool "MLT5020 PWM buzzer driver"
+    default y
+    depends on DT_HAS_RP_PWM_BUZZER_ENABLED
+    select PWM
+    help
+      Enable support for MLT5020 buzzer using a PWM controller.
+      Requires a device-tree node with compatible = "rp,pwm-buzzer".
+
+
+
+
