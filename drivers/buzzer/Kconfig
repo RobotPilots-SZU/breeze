@@ -1,0 +1,26 @@
+# Copyright (c) 2025 RobotPilots
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig BUZZER
+	bool "Buzzer drivers"
+	help
+	  Include buzzer drivers in the system configuration.
+
+if BUZZER
+
+module = BUZZER
+module-str = Buzzer
+source "subsys/logging/Kconfig.template.log_config"
+
+config BUZZER_INIT_PRIORITY
+    int "MLT5020 init priority"
+    default 60
+    range 0 99
+    depends on MLT5020_BUZZER_PWM
+    help
+      Device init priority at POST_KERNEL stage.
+
+
+rsource "./Kconfig.MLT5202"
+
+endif # BUZZER
