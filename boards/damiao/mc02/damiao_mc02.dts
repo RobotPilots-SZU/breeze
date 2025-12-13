@@ -31,8 +31,17 @@
         };
     };
 
+    buzzer: buzzer0 {
+        status = "okay";
+        compatible = "rp,pwm-buzzer";
+        pwms = <&pwmBuzzer 2 PWM_MSEC(1) PWM_POLARITY_NORMAL>;
+        default-frequency = <2000>;
+        default-volume = <50>;
+    };
+
     aliases {
         sw0 = &user_button;
+        buzzer0 = &buzzer;
     };
 };
 
@@ -162,6 +171,18 @@
                         <LED_COLOR_ID_RED>,
                         <LED_COLOR_ID_BLUE>;
         reset-delay = <250>;
+    };
+};
+
+&timers12 {
+    status = "okay";
+    st,prescaler = <138>;    // 137.5MHz / 137.5 = 1MHz
+
+    pwmBuzzer: pwm{
+        compatible = "st,stm32-pwm";
+        status = "okay";
+        pinctrl-0 = <&tim12_ch2_pb15>;
+        pinctrl-names = "default";
     };
 };
 

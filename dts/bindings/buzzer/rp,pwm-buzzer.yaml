@@ -1,0 +1,35 @@
+# Copyright (c) 2025 Sassinak
+# SPDX-License-Identifier: Apache-2.0
+
+description: 
+  Custom PWM-controlled Buzzer
+
+compatible: "rp,pwm-buzzer"
+
+properties:
+  pwms:
+    required: true
+    type: phandle-array
+    description: |
+      Reference to a PWM instance.
+
+  label:
+    type: string
+    description: |
+      Human readable string describing the Buzzer. It can be used by an
+      application to identify this Buzzer or to retrieve its number/index
+      (i.e. child node number) on the parent device.
+
+  default-frequency:
+    required: true
+    type: int
+    description: |
+      The frequency of the buzzer in Hertz.
+    default: 2000
+
+  default-volume:
+    required: true
+    type: int
+    description: |
+      Number of volume levels supported by the buzzer. range is 0-100.
+    default: 50
