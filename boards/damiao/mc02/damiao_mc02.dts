@@ -90,7 +90,7 @@
 };
 
 &pwr {
-    power-supply = "external-source";
+    power-supply = "ldo";           // 此配置严禁修改，会造成芯片死锁
     status = "okay";
 };
 
