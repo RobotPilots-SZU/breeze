@@ -21,6 +21,7 @@ fi
 
 if [ -d "$CUR_PATH/breeze-sdk/toolchain" ]; then
     export ZEPHYR_SDK_INSTALL_DIR="$CUR_PATH/breeze-sdk/toolchain"
+    export PATH="$ZEPHYR_SDK_INSTALL_DIR/arm-zephyr-eabi/bin:$PATH"
     echo "[breeze-env] Found built-in toolchain: $ZEPHYR_SDK_INSTALL_DIR"
 else
     echo "[breeze-env] Built-in toolchain not found, run \"west sdk\" to check it."
