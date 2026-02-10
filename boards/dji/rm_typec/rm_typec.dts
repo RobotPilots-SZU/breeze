@@ -151,14 +151,14 @@ zephyr_udc0: &usbotg_fs {
 &can1 {
     pinctrl-0 = <&can1_rx_pd0 &can1_tx_pd1>;
     pinctrl-names = "default";
-    bus-speed = <1000000>;
+    bitrate = <1000000>;                       
     status = "okay";
 };
 
 &can2 {
     pinctrl-0 = <&can2_rx_pb5 &can2_tx_pb6>;
     pinctrl-names = "default";
-    bus-speed = <1000000>;
+    bitrate = <1000000>;                       
     status = "okay";
 };
 
@@ -201,6 +201,8 @@ zephyr_udc0: &usbotg_fs {
      * Note: because the PLLI2S is dependent on the main PLL, the latter
      *       should not be changed without checking impact on PLLI2S
      */
+    clocks = <&clk_hse>;
+    div-m = <6>;
     mul-n = <271>;
     div-r = <2>;
     status = "okay";
