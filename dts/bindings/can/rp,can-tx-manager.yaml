@@ -1,0 +1,16 @@
+# Copyright (c) 2025 RobotPilots-SZU
+# SPDX-License-Identifier: Apache-2.0
+
+description: Custom CAN TX manager (one per CAN bus).
+
+compatible: "rp,can-tx-manager"
+
+properties:
+  can-bus:
+    type: phandle
+    required: true
+    description: Reference to the CAN controller used for transmitting frames.
+
+  label:
+    type: string
+    description: Human readable label.
