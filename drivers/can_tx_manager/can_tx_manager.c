@@ -73,14 +73,9 @@ int rp_can_tx_manager_init(const struct device *dev)
         return -EINVAL;
     }
 
-    /* safe init: avoid memset on structures containing kernel objects */
     (void)cfg;
-    for (int i = 0; i < CONFIG_MAX_DEVICE_SENDERS; i++) {
-        data->sender_list[i].used = false;
-        data->sender_list[i].tx_id = 0;
-        data->sender_list[i].rx_id = 0;
-        data->sender_list[i].fill_buffer_cb = NULL;
-    }
+    memset(&data->sender_list, 0, sizeof(data->sender_list));
+    memset(&data->can_items, 0, sizeof(data->can_items));
     data->frame_num = 0;
     k_mutex_init(&data->lock);                                         /* initialize mutex */
 
