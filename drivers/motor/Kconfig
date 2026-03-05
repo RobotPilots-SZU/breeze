@@ -1,0 +1,47 @@
+menuconfig MOTOR
+    bool "Motor drivers"
+    default n
+    depends on CAN
+
+if MOTOR
+
+config MOTOR_DJI_HEARTBEAT_OFFLINE_TIMEOUT_MS
+        int "DJI motor offline timeout (ms)"
+        default 100
+        range 1 60000
+        help
+            If no CAN frames are received for longer than this time, the motor is
+            considered offline. Unit: milliseconds.
+
+config MOTOR_DJI_HEARTBEAT_AUTOCHECK
+        bool "DJI motor heartbeat auto-check (workqueue)"
+        default n
+        help
+            Periodically calls motor_dji_update_heartbeat_status() using a delayable
+            work item (shared system workqueue). This avoids creating one thread per
+            motor device.
+
+config MOTOR_DJI_HEARTBEAT_POLL_PERIOD_MS
+        int "DJI motor heartbeat poll period (ms)"
+        default 10
+        range 1 1000
+        depends on MOTOR_DJI_HEARTBEAT_AUTOCHECK
+        help
+            Poll period for heartbeat auto-check. Unit: milliseconds.
+
+config MOTOR_INIT_PRIORITY
+        int "Init priority"
+        default 93
+        range 0 99
+        help
+            Device init priority for motor drivers.
+            Must be greater (later) than the CAN controller init priority.
+
+config MOTOR_LOG_LEVEL
+    int "Motor log level"
+    default 3
+    range 0 4
+    help
+      Log level for motor drivers (0=none, 4=debug).
+
+endif # MOTOR

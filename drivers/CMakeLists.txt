@@ -5,3 +5,4 @@
 # as the module CMake entry point (see zephyr/module.yml).
 
 add_subdirectory_ifdef(CONFIG_BUZZER buzzer)
+add_subdirectory_ifdef(CONFIG_MOTOR motor)

@@ -1,0 +1,49 @@
+/*dts-test-motor*/
+/ {
+    can_rx_mgr1: can_rx_mgr1 {
+        compatible = "rp,can-rx-manager";
+        status = "okay";
+        can-bus = <&fdcan1>;
+        label = "can_rx_mgr1";
+    };
+
+    can_tx_mgr1: can_tx_mgr1 {
+        compatible = "rp,can-tx-manager";
+        status = "okay";
+        can-bus = <&fdcan1>;
+        label = "can_tx_mgr1";
+    };
+
+    chassis_FL:motor1{
+        compatible = "rp,dji-can-motor";
+        status = "okay";
+        can-bus = <&fdcan1>;
+        rx-manager = <&can_rx_mgr1>;
+        tx-manager = <&can_tx_mgr1>;
+        tx-id = <0x200>;
+        rx-id = <0x201>;
+        motor-type = "M3508";
+        label = "chassis_fl";
+        control-mode = "torque";
+        Tx-feq = <1000>;
+        motor-encoder = <8192>;
+        motor-transmission-ratio = <19>;
+    };
+
+    chassis_FR:motor2{
+        compatible = "rp,dji-can-motor";
+        status = "okay";
+        can-bus = <&fdcan1>;
+        rx-manager = <&can_rx_mgr1>;
+        tx-manager = <&can_tx_mgr1>;
+        tx-id = <0x200>;
+        rx-id = <0x202>;
+        motor-type = "M3508";
+        label = "chassis_fr";
+        control-mode = "torque";
+        Tx-feq = <1000>;
+        motor-encoder = <8192>;
+        motor-transmission-ratio = <19>;
+    };
+
+};
