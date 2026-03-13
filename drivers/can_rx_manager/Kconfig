@@ -1,0 +1,122 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025 RobotPilots-SZU
+menuconfig CAN_RX_MANAGER
+    bool "CAN RX manager"
+    default n
+    depends on CAN
+    select CAN_MCAN if CAN
+    help
+      Enable per-CAN-bus RX manager which receives frames into a message queue and dispatches
+      them to registered software handlers.
+
+if CAN_RX_MANAGER
+
+# 依赖CAN_MCAN，避免非MCAN场景下无效
+config CAN_MCAN_FIFO0_DEPTH
+    int "RX FIFO0 Depth (MCAN)"
+    default 32
+    depends on CAN_MCAN
+    range 1 64
+    help
+      Number of elements in MCAN RX FIFO0. Matches your working hardware configuration.
+
+config CAN_MCAN_FIFO0_ELEMENT_SIZE                  # 数据帧大小
+    int "RX FIFO0 Element Size (bytes, MCAN)"
+    default 8
+    depends on CAN_MCAN
+    range 4 64
+    help
+      Size of each element in MCAN RX FIFO0. Matches your working hardware configuration.
+
+config CAN_MCAN_SD_FILTERS_NBR                      # 标准滤波器数量
+    int "Standard Filter Number (MCAN)"
+    default 1
+    depends on CAN_MCAN
+    range 0 128
+    help
+      Number of standard ID filters for MCAN.
+
+config CAN_MCAN_EX_FILTERS_NBR                      # 扩展滤波器数量
+    int "Extended Filter Number (MCAN)"
+    default 0
+    depends on CAN_MCAN
+    range 0 64
+    help
+      Number of extended ID filters for MCAN.
+
+config CAN_MCAN_TX_FIFO_QUEUE_ELTS_NBR              # 发送FIFO/队列元素数量
+    int "TX FIFO/Queue Element Number (MCAN)"
+    default 32
+    depends on CAN_MCAN
+    range 1 64
+    help
+      Number of elements in MCAN TX FIFO/Queue.
+
+config CAN_MCAN_TX_ELEMENT_SIZE                     # 发送FIFO/队列元素大小
+    int "TX Element Size (bytes, MCAN)"
+    default 8
+    depends on CAN_MCAN
+    range 4 64
+    help
+      Size of each element in MCAN TX FIFO/Queue.
+
+config CAN_RX_MANAGER_INIT_PRIORITY
+        int "Init priority"
+        default 90
+        range 0 99
+        help
+            Device init priority for the CAN RX manager.
+            Must be greater (later) than the CAN controller init priority.
+
+config CAN_RX_MANAGER_MAX_LISTENERS
+    int "Max number of registered listeners"
+    default 64
+    range 1 256
+
+config CAN_RX_MANAGER_RX_MSGQ_LEN
+    int "RX message queue length"
+    default 384
+    range 4 1024
+
+config CAN_RX_MANAGER_RX_STACK_SIZE
+    int "RX thread stack size"
+    default 2048
+    range 512 16384
+
+config CAN_RX_MANAGER_RX_THREAD_PRIO
+    int "RX thread priority (lower is higher)"
+    default 5
+    range 0 15
+
+config CAN_RX_MANAGER_MSGQ_MONITOR
+        bool "Monitor RX msgq drops (msgq full)"
+        default n
+        help
+            Counts CAN frames dropped because the RX message queue is full (k_msgq_put() failed from
+            ISR context). The RX thread will log warnings when drops occur.
+
+config CAN_RX_MANAGER_BATCH_LIMIT
+        int "RX batch limit per wake"
+        default 16
+        range 1 64
+        help
+            Maximum number of frames the shared RX thread will process per wake before yielding.
+            Prevents long single-run processing and stack/CPU starvation on high-load systems.
+
+config CAN_RX_MANAGER_STACK_WARN_THRESHOLD
+        int "RX worker stack warn threshold (bytes)"
+        default 256
+        range 0 16384
+        help
+            If non-zero, the shared RX worker will check its remaining stack and emit a
+            LOG_WRN when the free stack bytes fall below this threshold.
+
+config CAN_RX_MANAGER_MSGQ_WARN_EVERY_N_DROPS
+        int "Warn every N dropped frames"
+        default 1
+        range 1 1000000
+        depends on CAN_RX_MANAGER_MSGQ_MONITOR
+        help
+            Emit a LOG_WRN each time the cumulative drop counter increases by N.
+
+endif # CAN_RX_MANAGER
