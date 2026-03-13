@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CAN_TX_MANAGER
+    bool "CAN TX manager"
+    default n
+    depends on CAN
+    help
+      Enable per-CAN-bus TX manager which manages transmission of CAN frames from registered software handlers.
+      them to registered software handlers.
+
+if CAN_TX_MANAGER
+
+config CAN_TX_MANAGER_INIT_PRIORITY
+        int "Init priority"
+        default 91
+        range 0 99
+        help
+            Device init priority for the CAN TX manager.
+            Must be greater (later) than the CAN controller init priority.
+
+config MAX_DEVICE_SENDERS
+    int "singal can bus Max number of registered senders"
+    default 16
+    range 1 256
+
+config MAX_CAN_FRAMES
+    int "singal can bus Max number of CAN frames in TX queue"
+    default 16
+    range 1 256
+
+config CAN_TX_MANAGER_THREAD_STACK_SIZE
+    int "CAN TX manager periodic thread stack size (bytes)"
+    default 1024
+    range 512 8192
+
+config CAN_TX_MANAGER_THREAD_PRIORITY
+    int "CAN TX manager periodic thread priority"
+    default 6
+    range 0 14
+
+endif

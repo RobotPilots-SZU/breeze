@@ -6,3 +6,4 @@
 
 add_subdirectory_ifdef(CONFIG_BUZZER buzzer)
 add_subdirectory_ifdef(CONFIG_MOTOR motor)
+add_subdirectory_ifdef(CONFIG_CAN_TX_MANAGER can_tx_manager)
