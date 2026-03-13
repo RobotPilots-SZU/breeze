@@ -1,0 +1,2 @@
+source "Kconfig.zephyr"
+source "../../breeze/drivers/can_rx_manager/Kconfig"
