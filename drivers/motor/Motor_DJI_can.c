@@ -63,15 +63,15 @@ typedef struct motor_dji_cfg_t {
 
 typedef struct motor_dji_data_t
 {
-    sMotor_data_t motor_data;
+    smotor_data_t motor_data;
     uint16_t Tx_feq;                        // 发送频率，单位Hz，0表示仅手动发送
     struct k_spinlock lock;                 // 保护 motor_data 的自旋锁，防止接收更新和心跳检测冲突
     bool registered;
 #if defined(CONFIG_CAN_RX_MANAGER)
-    int RxManager_slot_id;                  // CAN RX管理器 槽位ID
+    int rxmanager_slot_id;                  // CAN RX管理器 槽位ID
 #endif
 #if defined(CONFIG_CAN_TX_MANAGER)
-    int TxManager_slot_id;                  // CAN TX管理器 槽位ID
+    int txmanager_slot_id;                  // CAN TX管理器 槽位ID
 #endif
 #if defined(CONFIG_MOTOR_DJI_HEARTBEAT_AUTOCHECK)
     const struct device *dev_self;          // 指向自身设备的指针，用于心跳自动检测
@@ -130,11 +130,11 @@ static void motor_dji_can_isr_cb(const struct device *dev, struct can_frame *fra
     {
     case 1: // MOTOR_DJI_TYPE_M3508
     {
-        data->motor_data.Rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-        data->motor_data.Rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-        data->motor_data.Rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-        data->motor_data.Rx_data.specific_data.m3508.temp = (int16_t)frame->data[6];
-        data->motor_data.Rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
+        data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
+        data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
+        data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
+        data->motor_data.rx_data.specific_data.m3508.temp = (int16_t)frame->data[6];
+        data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
                                                          MOTOR_RX_VALID_SPEED |
                                                          MOTOR_RX_VALID_CURRENT |
                                                          MOTOR_RX_VALID_TEMP);
@@ -142,21 +142,21 @@ static void motor_dji_can_isr_cb(const struct device *dev, struct can_frame *fra
     }
     case 2: // MOTOR_DJI_TYPE_M2006
     {
-        data->motor_data.Rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-        data->motor_data.Rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-        data->motor_data.Rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-        data->motor_data.Rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
+        data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
+        data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
+        data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
+        data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
                                                          MOTOR_RX_VALID_SPEED |
                                                          MOTOR_RX_VALID_CURRENT);
         break;
     }
     case 3: // MOTOR_DJI_TYPE_M6020
     {
-        data->motor_data.Rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-        data->motor_data.Rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-        data->motor_data.Rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-        data->motor_data.Rx_data.specific_data.m6020.temp = (int16_t)frame->data[6];
-        data->motor_data.Rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
+        data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
+        data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
+        data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
+        data->motor_data.rx_data.specific_data.m6020.temp = (int16_t)frame->data[6];
+        data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
                                                          MOTOR_RX_VALID_SPEED |
                                                          MOTOR_RX_VALID_CURRENT |
                                                          MOTOR_RX_VALID_TEMP);
@@ -165,7 +165,7 @@ static void motor_dji_can_isr_cb(const struct device *dev, struct can_frame *fra
     case 0: // MOTOR_UNKNOWN
     default:
     {
-        memset(&data->motor_data.Rx_data, 0, sizeof(data->motor_data.Rx_data));
+        memset(&data->motor_data.rx_data, 0, sizeof(data->motor_data.rx_data));
         LOG_ERR("[dji_motor_err] rx handle unknown motor type: %d", cfg->motor_type);
         break;
     }
@@ -211,11 +211,11 @@ static void motor_dji_can_rx_handler(const struct can_frame *frame, void *user_d
     {
         case 1: // MOTOR_DJI_TYPE_M3508
         {
-            data->motor_data.Rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-            data->motor_data.Rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-            data->motor_data.Rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-            data->motor_data.Rx_data.specific_data.m3508.temp = (int16_t)frame->data[6];
-            data->motor_data.Rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
+            data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
+            data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
+            data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
+            data->motor_data.rx_data.specific_data.m3508.temp = (int16_t)frame->data[6];
+            data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
                                                             MOTOR_RX_VALID_SPEED |
                                                             MOTOR_RX_VALID_CURRENT |
                                                             MOTOR_RX_VALID_TEMP);
@@ -223,21 +223,21 @@ static void motor_dji_can_rx_handler(const struct can_frame *frame, void *user_d
         }
         case 2: // MOTOR_DJI_TYPE_M2006
         {
-            data->motor_data.Rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-            data->motor_data.Rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-            data->motor_data.Rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-            data->motor_data.Rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
+            data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
+            data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
+            data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
+            data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
                                                             MOTOR_RX_VALID_SPEED |
                                                             MOTOR_RX_VALID_CURRENT);
             break;
         }
         case 3: // MOTOR_DJI_TYPE_M6020
         {
-            data->motor_data.Rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-            data->motor_data.Rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-            data->motor_data.Rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-            data->motor_data.Rx_data.specific_data.m6020.temp = (int16_t)frame->data[6];
-            data->motor_data.Rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
+            data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
+            data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
+            data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
+            data->motor_data.rx_data.specific_data.m6020.temp = (int16_t)frame->data[6];
+            data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
                                                             MOTOR_RX_VALID_SPEED |
                                                             MOTOR_RX_VALID_CURRENT |
                                                             MOTOR_RX_VALID_TEMP);
@@ -246,7 +246,7 @@ static void motor_dji_can_rx_handler(const struct can_frame *frame, void *user_d
         case 0: // MOTOR_UNKNOWN
         default:
         {
-            memset(&data->motor_data.Rx_data, 0, sizeof(data->motor_data.Rx_data));
+            memset(&data->motor_data.rx_data, 0, sizeof(data->motor_data.rx_data));
             LOG_ERR("[dji_motor_err] rx handle unknown motor type: %d", cfg->motor_type);
             break;
         }
@@ -306,7 +306,7 @@ static int motor_dji_can_tx_fillbuffer_handler(struct can_frame *frame, void *us
                 k_spin_unlock(&data->lock, key);
                 return -EFAULT;
             }
-            memcpy(&frame->data[idx], &data->motor_data.Tx_data[0], 2);
+            memcpy(&frame->data[idx], &data->motor_data.tx_data[0], 2);
             k_spin_unlock(&data->lock, key);
             return 0;
         }
@@ -347,8 +347,8 @@ static int motor_dji_can_control(const struct device *dev, int16_t current)
     {
         case 0: // torque
         case 1: // velocity
-            data->motor_data.Tx_data[0] = (uint8_t)((current >> 8) & 0xFF);
-            data->motor_data.Tx_data[1] = (uint8_t)(current & 0xFF);
+            data->motor_data.tx_data[0] = (uint8_t)((current >> 8) & 0xFF);
+            data->motor_data.tx_data[1] = (uint8_t)(current & 0xFF);
             break;
         default:
             k_spin_unlock(&data->lock, key);
@@ -400,7 +400,7 @@ int motor_dji_update_heartbeat_status(const struct device *dev)
 
         /* 只有从在线->离线时，才清零并告警；避免每次轮询刷屏 */
         if (prev_alive) {
-            memset(&data->motor_data.Rx_data, 0, sizeof(data->motor_data.Rx_data));
+            memset(&data->motor_data.rx_data, 0, sizeof(data->motor_data.rx_data));
             LOG_ERR("[dji_motor_err] motor offline (%s, rx=0x%03x): no CAN frames for %llu ms",
                     (cfg != NULL && cfg->motor_label != NULL) ? cfg->motor_label : "unknown",
                     (cfg != NULL) ? (unsigned int)cfg->rx_id : 0U,
@@ -470,7 +470,7 @@ static int motor_dji_can_register_motor(const struct device *dev)
         return rx_ret;
     }
     else LOG_INF("Motor (%s) registered on RxManager, CAN RX ID: 0x%03X  slotID: %d", cfg->motor_label, cfg->rx_id, rx_ret);
-    data->RxManager_slot_id = rx_ret;
+    data->rxmanager_slot_id = rx_ret;
 #else // 不使用 RX 管理器，直接注册 CAN 接收回调函数
     rx_ret = can_add_rx_filter(cfg->can_dev, motor_dji_can_isr_cb, (void *)dev, &filter);
     if (rx_ret < 0) {
@@ -490,15 +490,15 @@ static int motor_dji_can_register_motor(const struct device *dev)
         return tx_ret;
     }
     else LOG_INF("Motor (%s) registered on TxManager, CAN TX ID: 0x%03X  slotID: %d", cfg->motor_label, cfg->tx_id, tx_ret);
-    data->TxManager_slot_id = tx_ret;
+    data->txmanager_slot_id = tx_ret;
 #else
     LOG_INF("Motor (%s) did not register on TxManager, CAN TX ID: 0x%03X", cfg->motor_label, cfg->tx_id);
 #endif
 
     data->registered = true;
-    data->motor_data.Tx_data[0] = 0;
+    data->motor_data.tx_data[0] = 0;
     data->motor_data.interface_ptr = (void *)cfg;
-    data->motor_data.Rx_data.valid_mask = 0U;
+    data->motor_data.rx_data.valid_mask = 0U;
     data->motor_data.heartbeat_status.is_alive = false;
     data->motor_data.heartbeat_status.heartbeat_tick = 0;
     return 0;
@@ -511,9 +511,9 @@ static int motor_dji_can_register_motor(const struct device *dev)
  *        如果在多核平台上使用，请自行加锁保护！！！！！或者改成双缓冲及快照
  *
  * @param dev
- * @return const sMotor_Receive_Data_t*
+ * @return const smotor_receive_data_t*
  */
-static const sMotor_Receive_Data_t *motor_dji_can_get_rxdata(const struct device *dev)
+static const smotor_receive_data_t *motor_dji_can_get_rxdata(const struct device *dev)
 {
     motor_dji_data_t *data = dev->data;
     if (data == NULL) {
@@ -521,7 +521,7 @@ static const sMotor_Receive_Data_t *motor_dji_can_get_rxdata(const struct device
         return NULL;
     }
 
-    return &data->motor_data.Rx_data;
+    return &data->motor_data.rx_data;
 }
 
 
@@ -532,7 +532,7 @@ static const sMotor_Receive_Data_t *motor_dji_can_get_rxdata(const struct device
  * @param new_feq
  * @return int
  */
-static int motor_dji_can_change_Tx_feq(const struct device *dev, uint16_t new_feq)
+static int motor_dji_can_change_tx_feq(const struct device *dev, uint16_t new_feq)
 {
     motor_dji_data_t *data = dev->data;
     if (data == NULL) {
@@ -573,7 +573,7 @@ static int motor_dji_can_get_heartbeat_status(const struct device *dev)
 
 static const motor_driver_api_t motor_dji_can_api = {
     .register_motor = motor_dji_can_register_motor,
-    .change_Tx_feq = motor_dji_can_change_Tx_feq,
+    .change_tx_feq = motor_dji_can_change_tx_feq,
     .update_serialized = motor_dji_can_control,
     .get_heartbeat_status = motor_dji_can_get_heartbeat_status,
     .get_rxdata = motor_dji_can_get_rxdata,
@@ -617,7 +617,7 @@ static int motor_dji_can_init(const struct device *dev)
     data->registered = false;
     memset(&data->motor_data, 0, sizeof(data->motor_data));
     data->motor_data.interface_ptr = (void *)cfg;
-    data->motor_data.Rx_data.valid_mask = 0U;
+    data->motor_data.rx_data.valid_mask = 0U;
     data->motor_data.heartbeat_status.is_alive = false;
     data->motor_data.heartbeat_status.heartbeat_tick = 0;
 

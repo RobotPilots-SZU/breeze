@@ -21,7 +21,9 @@ LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
 #define CHASSIS_FL_NODE DT_NODELABEL(chassis_fl)
 #define CHASSIS_FR_NODE DT_NODELABEL(chassis_fr)
+#ifdef CONFIG_CAN_RX_MANAGER
 #define RX_MANAGER_NODE DT_NODELABEL(can_rx_mgr1)
+#endif
 
 static float angle_rad = 0.0f;        // 正弦函数的角度（弧度）
 static const float ANGLE_STEP = 0.1f; // 每次调用的角度步长（控制正弦频率）
@@ -32,7 +34,9 @@ int main(void)
     LOG_INF("[app] start");
     const struct device *motor_fl = DEVICE_DT_GET(CHASSIS_FL_NODE);
     const struct device *motor_fr = DEVICE_DT_GET(CHASSIS_FR_NODE);
+#ifdef CONFIG_CAN_RX_MANAGER
     const struct device *rx_mgr   = DEVICE_DT_GET(RX_MANAGER_NODE);
+#endif
     const char *motor_type = DT_PROP(CHASSIS_FL_NODE, motor_type);
     if (!motor_fl) {
         LOG_ERR("motor FL not found");
@@ -51,7 +55,7 @@ int main(void)
         LOG_ERR("motor FR not ready: %s", motor_fr->name);
         return -ENODEV;
     }
-
+#ifdef CONFIG_CAN_RX_MANAGER
     if(!rx_mgr) {
         LOG_ERR("CAN RX manager not found");
         return -ENODEV;
@@ -60,7 +64,7 @@ int main(void)
         LOG_ERR("CAN RX manager not ready: %s", rx_mgr->name);
         return -ENODEV;
     }
-
+#endif
     int current_max = 0;
 
     if(strcmp(motor_type, "M3508") == 0)
@@ -93,8 +97,8 @@ int main(void)
             angle_rad = 0.0f;
         }
 
-        const sMotor_Receive_Data_t *fl = get_motor_rxdata(motor_fl);
-        const sMotor_Receive_Data_t *fr = get_motor_rxdata(motor_fr);
+        const smotor_receive_data_t *fl = get_motor_rxdata(motor_fl);
+        const smotor_receive_data_t *fr = get_motor_rxdata(motor_fr);
 
         // 接收函数检查
         LOG_INF("FL angle=%d speed=%d current=%d alive=%d temp=%d",

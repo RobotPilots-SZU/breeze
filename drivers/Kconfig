@@ -1,0 +1,4 @@
+rsource "./buzzer/Kconfig"
+rsource "./motor/Kconfig"
+rsource "./can_tx_manager/Kconfig"
+rsource "./can_rx_manager/Kconfig"
