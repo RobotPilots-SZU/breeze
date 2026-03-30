@@ -253,6 +253,7 @@ zephyr_udc0: &usbotg_fs {
         int2-conf-io = <0x00>;
         accel-hz = "800";
         accel-fs = <24>;
+        fifo-watermark = <16>;
     };
 
     bmi08x_gyro: bmi08x@1 {
@@ -264,6 +265,7 @@ zephyr_udc0: &usbotg_fs {
         int3-4-conf-io = <0x02>;
         gyro-hz = "1000_116";
         gyro-fs = <1000>;
+        fifo-watermark = <16>;
     };
 };
 

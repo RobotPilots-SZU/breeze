@@ -1,0 +1,108 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"cmake.preferredGenerators": [
+			"Ninja",
+			"Unix Makefiles"
+		],
+		"kconfig.zephyr.base": "${workspaceFolder}/../../breeze-sdk/zephyr",
+		"devicetree.zephyr": "${workspaceFolder}/../../breeze-sdk/zephyr",
+		"devicetree.modules": [
+			"${workspaceFolder}/../../breeze",
+			"${workspaceFolder}/../../breeze-sdk/zephyr",
+			"${workspaceFolder}/../../breeze-sdk/modules/*/*"
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "West: Build",
+				"type": "shell",
+				"command": "bash -c 'source .venv/bin/activate && west build'", // 关键修改：激活虚拟环境
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				}
+			},
+			{
+				"label": "West: Menu Config",
+				"type": "shell",
+				"command": "west",
+				"args": [
+					"build",
+					"-t",
+					"menuconfig"
+				],
+				"problemMatcher": []
+			},
+			{
+				"label": "West: Debugserver (OpenOCD)",
+				"type": "shell",
+				"command": "west",
+				"args": [
+					"debugserver",
+					"-d",
+					"${workspaceFolder}",
+					"-r",
+					"openocd"
+				],
+				"problemMatcher": []
+			},
+			{
+				"label": "West: Debugserver (JLink)",
+				"type": "shell",
+				"command": "west",
+				"args": [
+					"debugserver",
+					"-d",
+					"${workspaceFolder}",
+					"-r",
+					"jlink"
+				],
+				"problemMatcher": []
+			}
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"cwd": "${workspaceRoot}",
+				"executable": "./build/zephyr/zephyr.elf",
+				"name": "Debug with OpenOCD",
+				"request": "launch",
+				"type": "cortex-debug",
+				"servertype": "openocd",
+				//更改openocd.cfg成适合你的开发板的配置文件
+				"configFiles": [
+					"/home/bana/breeze-workspace/breeze-app/imu/openocd.cfg"
+				],
+				"searchDir": [
+					"/usr/share/openocd/scripts"
+				],
+				"runToEntryPoint": "main",
+				"showDevDebugOutput": "parsed",
+				"device": "STM32F407",
+				"svdFile": "${workspaceFolder}/boards/dji/rm_typec/support/STM32F407.svd",
+				"objdumpPath": "/opt/zephyr-sdk/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump",
+				"rttConfig": {
+					"enabled": true,
+					"address": "0x20000000", // F4 的 SRAM 起始地址
+					"searchSize": 131072, // 128KB，足够
+					"searchId": "SEGGER RTT",
+					"decoders": [
+						{
+							"port": 0,
+							"type": "console"
+						}
+					]
+				}
+			}
+		]
+	}
+}
