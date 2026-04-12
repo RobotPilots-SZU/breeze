@@ -1,0 +1,18 @@
+/* This file will automatic applyed when using damiao_mc02 board */
+
+/* 启用板载看门狗 */
+
+/ {
+    aliases {
+        watchdog0 = &iwdg;  /* 将 watchdog0 指向 IWDG 硬件 */
+        watchdog1 = &wwdg;  /* 将 watchdog1 指向 WWDG 硬件 */
+    };
+};
+
+&iwdg {
+    status = "okay"; /* 启用独立看门狗 IWDG */
+};
+
+&wwdg {
+    status = "okay"; /* 启用窗口看门狗 WWDG  */
+};
