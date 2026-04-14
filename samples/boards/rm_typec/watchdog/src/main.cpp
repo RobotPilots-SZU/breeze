@@ -56,7 +56,7 @@ int main()
     };
     wwdg_config = (struct wdt_timeout_cfg){
         .window = {
-            .max = 20U,                     /* 窗口最大值（ms） 最大约24.97ms */
+            .max = 20U,                     /* 窗口值（ms） 20ms */
         },
         .callback = wdg_timeout_callback,   /* 超时触发时执行回调 */
         .flags = WDT_FLAG_RESET_SOC,        /* 超时后执行系统复位 */
