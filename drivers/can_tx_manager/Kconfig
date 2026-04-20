@@ -4,6 +4,8 @@ menuconfig CAN_TX_MANAGER
     bool "CAN TX manager"
     default n
     depends on CAN
+    select SYS_HASH_MAP
+    select SYS_HASH_FUNC32
     help
       Enable per-CAN-bus TX manager which manages transmission of CAN frames from registered software handlers.
       them to registered software handlers.
