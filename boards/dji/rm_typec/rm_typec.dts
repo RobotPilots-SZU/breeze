@@ -116,7 +116,7 @@
     stop-bits = "1";
     data-bits = <8>;
     parity = "none";
-    // dma-names = "usart1-tx", "usart1-rx";
+    dma-names = "usart1-tx", "usart1-rx";
     pinctrl-names = "default";
     current-speed = <921600>;
     status = "okay";
