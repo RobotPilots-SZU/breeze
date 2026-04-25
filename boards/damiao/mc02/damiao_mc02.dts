@@ -120,25 +120,26 @@
              <&rcc STM32_SRC_PLL2_P SPI123_SEL(0)>;
     pinctrl-0 = <&spi2_sck_pb13 &spi2_miso_pc2_c &spi2_mosi_pc1>;
     pinctrl-names = "default";
-    cs-gpios = <&gpioc 0 GPIO_ACTIVE_HIGH>,
-               <&gpioc 3 GPIO_ACTIVE_HIGH>;
+    cs-gpios = <&gpioc 0 GPIO_ACTIVE_LOW>,
+               <&gpioc 3 GPIO_ACTIVE_LOW>;
     dmas =  <&dmamux1 1 40 STM32_DMA_PERIPH_TX>,    // TX: DMA1 Stream 1, request 40
-            <&dmamux1 4 39 STM32_DMA_PERIPH_RX>;    // RX: DMA1 Stream 4, request 39
+    <&dmamux1 4 39 STM32_DMA_PERIPH_RX>;    // RX: DMA1 Stream 4, request 39
     dma-names = "spi1-tx", "spi1-rx";
 
     bmi08x_accel: bmi08x@0 {
         compatible = "bosch,bmi08x-accel";
         // SPI
         reg = <0>;
-        spi-max-frequency = <DT_FREQ_M(8)>;
+        spi-max-frequency = <DT_FREQ_M(7)>;
         // BMI08x
         int-gpios = <&gpioe 10 GPIO_ACTIVE_HIGH>;
         int1-map-io = <0x01>;
         int2-map-io = <0x00>;
         int1-conf-io = <0x04>;
         int2-conf-io = <0x00>;
-        accel-hz = "800";
+        accel-hz = "400";
         accel-fs = <24>;
+        fifo-watermark = <16>;
     };
 
     bmi08x_gyro: bmi08x@1 {
@@ -152,6 +153,7 @@
         int3-4-conf-io = <0x02>;
         gyro-hz = "1000_116";
         gyro-fs = <1000>;
+        fifo-watermark = <16>;
     };
 };
 
