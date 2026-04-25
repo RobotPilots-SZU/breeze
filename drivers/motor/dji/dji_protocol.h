@@ -71,7 +71,7 @@ typedef struct motor_dji_data_t
 #endif
 } motor_dji_data_t;
 
-void motor_M3508_fillbuffer(motor_dji_data_t *data, const struct can_frame *frame)
+static inline void motor_M3508_fillbuffer(motor_dji_data_t *data, const struct can_frame *frame)
 {
     data->motor_data.rx_data.encoder = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
     data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
@@ -83,7 +83,7 @@ void motor_M3508_fillbuffer(motor_dji_data_t *data, const struct can_frame *fram
                                                      MOTOR_DJI_6020);
 }
 
-void motor_M2006_fillbuffer(motor_dji_data_t *data, const struct can_frame *frame)
+static inline void motor_M2006_fillbuffer(motor_dji_data_t *data, const struct can_frame *frame)
 {
     data->motor_data.rx_data.encoder = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
     data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
@@ -93,7 +93,7 @@ void motor_M2006_fillbuffer(motor_dji_data_t *data, const struct can_frame *fram
                                                      MOTOR_RX_VALID_IQ);
 }
 
-void motor_M6020_fillbuffer(motor_dji_data_t *data, const struct can_frame *frame)
+static inline void motor_M6020_fillbuffer(motor_dji_data_t *data, const struct can_frame *frame)
 {
     data->motor_data.rx_data.encoder = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
     data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
