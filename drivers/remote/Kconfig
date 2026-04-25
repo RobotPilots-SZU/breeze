@@ -1,0 +1,26 @@
+# Copyright (c) 2026 RobotPilots
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig REMOTE
+	bool "Remote drivers"
+	help
+	  Include remote drivers in the system configuration.
+
+if REMOTE
+
+module = REMOTE
+module-str = Remote
+source "subsys/logging/Kconfig.template.log_config"
+
+config REMOTE_INIT_PRIORITY
+    int "DR16 remote init priority"
+    default 80
+    range 0 99
+    depends on DR16_REMOTE
+    help
+      Device init priority at POST_KERNEL stage.
+
+
+rsource "./Kconfig.DR16"
+
+endif # REMOTE

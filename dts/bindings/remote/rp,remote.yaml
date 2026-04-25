@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description:
+  DJI DR16 Remote Controller
+
+compatible: "rp,remote"
+
+properties:
+  uart:
+    type: phandle
+    required: true
+    description: |
+      UART peripheral used for remote communication.
+
+  label:
+    type: string
+    description: |
+      Human readable string describing the Remote. It can be used by an
+      application to identify this Remote or to retrieve its number/index
+      (i.e. child node number) on the parent device.
