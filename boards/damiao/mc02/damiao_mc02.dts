@@ -137,7 +137,7 @@
         int2-map-io = <0x00>;
         int1-conf-io = <0x04>;
         int2-conf-io = <0x00>;
-        accel-hz = "400";
+        accel-hz = "800";
         accel-fs = <24>;
         fifo-watermark = <16>;
     };
