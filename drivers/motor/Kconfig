@@ -5,27 +5,27 @@ menuconfig MOTOR
 
 if MOTOR
 
-config MOTOR_DJI_HEARTBEAT_OFFLINE_TIMEOUT_MS
-        int "DJI motor offline timeout (ms)"
+config MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS
+        int "motor offline timeout (ms)"
         default 100
         range 1 60000
         help
             If no CAN frames are received for longer than this time, the motor is
             considered offline. Unit: milliseconds.
 
-config MOTOR_DJI_HEARTBEAT_AUTOCHECK
-        bool "DJI motor heartbeat auto-check (workqueue)"
+config MOTOR_HEARTBEAT_AUTOCHECK
+        bool "motor heartbeat auto-check (workqueue)"
         default n
         help
             Periodically calls motor_dji_update_heartbeat_status() using a delayable
             work item (shared system workqueue). This avoids creating one thread per
             motor device.
 
-config MOTOR_DJI_HEARTBEAT_POLL_PERIOD_MS
-        int "DJI motor heartbeat poll period (ms)"
+config MOTOR_HEARTBEAT_POLL_PERIOD_MS
+        int "motor heartbeat poll period (ms)"
         default 10
         range 1 1000
-        depends on MOTOR_DJI_HEARTBEAT_AUTOCHECK
+        depends on MOTOR_HEARTBEAT_AUTOCHECK
         help
             Poll period for heartbeat auto-check. Unit: milliseconds.
 

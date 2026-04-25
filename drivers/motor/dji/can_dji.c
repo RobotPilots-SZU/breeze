@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Sassinak
+ * Copyright (c) 2025 RobotPilots-SZU
  * SPDX-License-Identifier: Apache-2.0
  * author: Sassinak
  */
@@ -7,81 +7,17 @@
 #undef DT_DRV_COMPAT
 #define DT_DRV_COMPAT rp_dji_can_motor
 
-#include <drivers/motor.h>
-
-#define LOG_LEVEL CONFIG_MOTOR_LOG_LEVEL
-#include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(motor_dji_can);
-
+#include "dji_protocol.h"
 #include <zephyr/sys/util.h>
 #include <zephyr/sys/util_macro.h>
-
 #include <errno.h>
 #include <string.h>
 #include <stddef.h>
 
-#include <zephyr/kernel.h>
-#include <zephyr/device.h>
-#include <zephyr/devicetree.h>
-#include <zephyr/drivers/can.h>
-
-#ifdef CONFIG_CAN_RX_MANAGER
-#include <drivers/can_rx_manager.h>
-#endif
-#ifdef CONFIG_CAN_TX_MANAGER
-#include <drivers/can_tx_manager.h>
-#endif
-
-/* Fallbacks for static analysis (Zephyr builds define these via autoconf.h) */
-#ifndef CONFIG_MOTOR_DJI_HEARTBEAT_OFFLINE_TIMEOUT_MS
-#define CONFIG_MOTOR_DJI_HEARTBEAT_OFFLINE_TIMEOUT_MS 100
-#endif
-#ifndef CONFIG_MOTOR_DJI_HEARTBEAT_POLL_PERIOD_MS
-#define CONFIG_MOTOR_DJI_HEARTBEAT_POLL_PERIOD_MS 10
-#endif
-
-/*
- * motor-id: DTS string -> const char*
- * control-mode: DTS enum -> DT_ENUM_IDX
- */
-typedef struct motor_dji_cfg_t {
-    uint16_t tx_id;
-    uint16_t rx_id;
-    int8_t motor_type;
-    const char *motor_label;
-    int8_t control_mode;
-    uint16_t motor_encoder;
-    uint8_t transmission_ratio;
-    const struct device *can_dev;
-#if defined(CONFIG_CAN_RX_MANAGER)
-    const struct device *rx_mgr;            // 可选：接收管理器
-#endif
-#if defined(CONFIG_CAN_TX_MANAGER)
-    const struct device *tx_mgr;            // 可选：发送管理器
-#endif
-} motor_dji_cfg_t;
-
-typedef struct motor_dji_data_t
-{
-    smotor_data_t motor_data;
-    uint16_t Tx_feq;                        // 发送频率，单位Hz，0表示仅手动发送
-    struct k_spinlock lock;                 // 保护 motor_data 的自旋锁，防止接收更新和心跳检测冲突
-    bool registered;
-#if defined(CONFIG_CAN_RX_MANAGER)
-    int rxmanager_slot_id;                  // CAN RX管理器 槽位ID
-#endif
-#if defined(CONFIG_CAN_TX_MANAGER)
-    int txmanager_slot_id;                  // CAN TX管理器 槽位ID
-#endif
-#if defined(CONFIG_MOTOR_DJI_HEARTBEAT_AUTOCHECK)
-    const struct device *dev_self;          // 指向自身设备的指针，用于心跳自动检测
-    struct k_work_delayable hb_work;        // 心跳自动检测的延时工作
-#endif
-} motor_dji_data_t;
 
 int motor_dji_update_heartbeat_status(const struct device *dev);
 
-#if defined(CONFIG_MOTOR_DJI_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
 static void motor_dji_hb_work_handler(struct k_work *work)
 {
     struct k_work_delayable *dwork = k_work_delayable_from_work(work);           // 获取 k_work_delayable 指针
@@ -89,88 +25,8 @@ static void motor_dji_hb_work_handler(struct k_work *work)
 
     if (data->dev_self != NULL) {
         (void)motor_dji_update_heartbeat_status(data->dev_self);
-        (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_MOTOR_DJI_HEARTBEAT_POLL_PERIOD_MS));   // 重新调度下一次心跳检测
+        (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS));   // 重新调度下一次心跳检测
     }
-}
-#endif
-
-/**
- * @brief 在不使用接收管理器的情况下，直接注册 CAN 接收回调函数，开始接收对应 ID 的 CAN 帧
- *
- * @param frame
- * @param user_data
- */
-#if !defined(CONFIG_CAN_RX_MANAGER)
-static void motor_dji_can_isr_cb(const struct device *dev, struct can_frame *frame, void *user_data)
-{
-    ARG_UNUSED(dev);
-    const struct device *motor_dev = (const struct device *)user_data;
-    if ((motor_dev == NULL) || (frame == NULL))
-    {
-        LOG_ERR("[dji_motor_err] rx handle Invalid arguments");
-        return;
-    }
-    motor_dji_data_t *data = (motor_dji_data_t *)motor_dev->data;               // 获取 motor 数据结构体指针
-    const motor_dji_cfg_t *cfg = (const motor_dji_cfg_t *)motor_dev->config;                        // 获取 motor 配置结构体指针
-    if( cfg == NULL || data == NULL)
-    {
-        LOG_ERR("[dji_motor_err] data and cfg struct is NULL");
-        return;
-    }
-
-    if ((frame->flags & CAN_FRAME_RTR) != 0U)
-    {
-        LOG_ERR("[dji_motor_err] RTR frame received");
-        return;
-    }
-
-    data->motor_data.heartbeat_status.is_alive = true;
-    /* 解析 CAN 帧数据 */
-    switch (cfg->motor_type)
-    {
-    case 1: // MOTOR_DJI_TYPE_M3508
-    {
-        data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-        data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-        data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-        data->motor_data.rx_data.specific_data.m3508.temp = (int16_t)frame->data[6];
-        data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
-                                                         MOTOR_RX_VALID_SPEED |
-                                                         MOTOR_RX_VALID_CURRENT |
-                                                         MOTOR_RX_VALID_TEMP);
-        break;
-    }
-    case 2: // MOTOR_DJI_TYPE_M2006
-    {
-        data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-        data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-        data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-        data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
-                                                         MOTOR_RX_VALID_SPEED |
-                                                         MOTOR_RX_VALID_CURRENT);
-        break;
-    }
-    case 3: // MOTOR_DJI_TYPE_M6020
-    {
-        data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-        data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-        data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-        data->motor_data.rx_data.specific_data.m6020.temp = (int16_t)frame->data[6];
-        data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
-                                                         MOTOR_RX_VALID_SPEED |
-                                                         MOTOR_RX_VALID_CURRENT |
-                                                         MOTOR_RX_VALID_TEMP);
-        break;
-    }
-    case 0: // MOTOR_UNKNOWN
-    default:
-    {
-        memset(&data->motor_data.rx_data, 0, sizeof(data->motor_data.rx_data));
-        LOG_ERR("[dji_motor_err] rx handle unknown motor type: %d", cfg->motor_type);
-        break;
-    }
-    }
-    data->motor_data.heartbeat_status.heartbeat_tick = (uint64_t)k_uptime_get();
 }
 #endif
 
@@ -211,36 +67,17 @@ static void motor_dji_can_rx_handler(const struct can_frame *frame, void *user_d
     {
         case 1: // MOTOR_DJI_TYPE_M3508
         {
-            data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-            data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-            data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-            data->motor_data.rx_data.specific_data.m3508.temp = (int16_t)frame->data[6];
-            data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
-                                                            MOTOR_RX_VALID_SPEED |
-                                                            MOTOR_RX_VALID_CURRENT |
-                                                            MOTOR_RX_VALID_TEMP);
+            motor_M3508_fillbuffer(data, frame);
             break;
         }
         case 2: // MOTOR_DJI_TYPE_M2006
         {
-            data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-            data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-            data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-            data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
-                                                            MOTOR_RX_VALID_SPEED |
-                                                            MOTOR_RX_VALID_CURRENT);
+            motor_M2006_fillbuffer(data, frame);
             break;
         }
         case 3: // MOTOR_DJI_TYPE_M6020
         {
-            data->motor_data.rx_data.angle = (uint16_t)((frame->data[0] << 8) | frame->data[1]);
-            data->motor_data.rx_data.speed = (int16_t)((frame->data[2] << 8) | frame->data[3]);
-            data->motor_data.rx_data.current = (int16_t)((frame->data[4] << 8) | frame->data[5]);
-            data->motor_data.rx_data.specific_data.m6020.temp = (int16_t)frame->data[6];
-            data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_ANGLE |
-                                                            MOTOR_RX_VALID_SPEED |
-                                                            MOTOR_RX_VALID_CURRENT |
-                                                            MOTOR_RX_VALID_TEMP);
+            motor_M6020_fillbuffer(data, frame);
             break;
         }
         case 0: // MOTOR_UNKNOWN
@@ -288,7 +125,7 @@ static int motor_dji_can_tx_fillbuffer_handler(struct can_frame *frame, void *us
             frame->dlc = 8;
             frame->flags = 0;
             k_spinlock_key_t key = k_spin_lock(&data->lock);
-            int diff = (int)cfg->rx_id - (int)cfg->tx_id;
+            int diff = cfg->rx_id % 10;
             if (diff <= 0 || diff > 8) {
                 LOG_ERR("[dji_motor_err] tx handle invalid id difference: tx_id=%d, rx_id=%d", cfg->tx_id, cfg->rx_id);
                 k_spin_unlock(&data->lock, key);
@@ -386,16 +223,20 @@ int motor_dji_update_heartbeat_status(const struct device *dev)
     uint64_t last_tick = data->motor_data.heartbeat_status.heartbeat_tick;
     bool prev_alive = data->motor_data.heartbeat_status.is_alive;
 
-    /* 尚未收到过任何帧时，不做掉线告警；Rx_data 默认保持为 0 */
-    if (last_tick == 0U) {
-        k_spin_unlock(&data->lock, key);
-        return 0;
-    }
+	if (last_tick == 0U) {
+		LOG_WRN_RATELIMIT_RATE(1000,
+			"[dji_motor_err] motor offline! no first CAN frame received (%s, rx=0x%03x)",
+			(cfg != NULL && cfg->motor_label != NULL) ? cfg->motor_label : "unknown",
+			(cfg != NULL) ? (unsigned int)cfg->rx_id : 0U);
+		data->motor_data.heartbeat_status.is_alive = false;
+		k_spin_unlock(&data->lock, key);
+		return 0;
+	}
 
     uint64_t elapsed = current_tick - last_tick;
 
     /* 如果超过阈值没有收到心跳，则认为电机掉线：清零接收值并在离线边沿告警一次 */
-    if (elapsed > (uint64_t)CONFIG_MOTOR_DJI_HEARTBEAT_OFFLINE_TIMEOUT_MS) {
+    if (elapsed > (uint64_t)CONFIG_MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS) {
         data->motor_data.heartbeat_status.is_alive = false;
 
         /* 只有从在线->离线时，才清零并告警；避免每次轮询刷屏 */
@@ -471,13 +312,8 @@ static int motor_dji_can_register_motor(const struct device *dev)
     }
     else LOG_INF("Motor (%s) registered on RxManager, CAN RX ID: 0x%03X  slotID: %d", cfg->motor_label, cfg->rx_id, rx_ret);
     data->rxmanager_slot_id = rx_ret;
-#else // 不使用 RX 管理器，直接注册 CAN 接收回调函数
-    rx_ret = can_add_rx_filter(cfg->can_dev, motor_dji_can_isr_cb, (void *)dev, &filter);
-    if (rx_ret < 0) {
-        LOG_ERR("[dji_motor_err] Failed to add CAN RX filter, error: %d", rx_ret);
-        return rx_ret;
-    }
-    else LOG_INF("Motor (%s) registered CAN RX ID: 0x%03X", cfg->motor_label, cfg->rx_id);
+#else 
+    LOG_INF("Motor (%s) did not register on RxManager, CAN RX ID: 0x%03X", cfg->motor_label, cfg->rx_id);
 #endif
 
 
@@ -489,8 +325,7 @@ static int motor_dji_can_register_motor(const struct device *dev)
         LOG_ERR("[dji_motor_err] Failed to register CAN TX filter: %d", tx_ret);
         return tx_ret;
     }
-    else LOG_INF("Motor (%s) registered on TxManager, CAN TX ID: 0x%03X  slotID: %d", cfg->motor_label, cfg->tx_id, tx_ret);
-    data->txmanager_slot_id = tx_ret;
+    else LOG_INF("Motor (%s) registered on TxManager, CAN TX ID: 0x%03X", cfg->motor_label, cfg->tx_id);
 #else
     LOG_INF("Motor (%s) did not register on TxManager, CAN TX ID: 0x%03X", cfg->motor_label, cfg->tx_id);
 #endif
@@ -574,9 +409,13 @@ static int motor_dji_can_get_heartbeat_status(const struct device *dev)
 static const motor_driver_api_t motor_dji_can_api = {
     .register_motor = motor_dji_can_register_motor,
     .change_tx_feq = motor_dji_can_change_tx_feq,
-    .update_serialized = motor_dji_can_control,
+    .torque_control = motor_dji_can_control,
     .get_heartbeat_status = motor_dji_can_get_heartbeat_status,
     .get_rxdata = motor_dji_can_get_rxdata,
+    .clear_error = NULL,
+    .disable = NULL,
+    .enable = NULL,
+    .stop   = NULL,
 };
 
 /**
@@ -621,10 +460,10 @@ static int motor_dji_can_init(const struct device *dev)
     data->motor_data.heartbeat_status.is_alive = false;
     data->motor_data.heartbeat_status.heartbeat_tick = 0;
 
-#if defined(CONFIG_MOTOR_DJI_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
     data->dev_self = dev;
     k_work_init_delayable(&data->hb_work, motor_dji_hb_work_handler);
-    (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_MOTOR_DJI_HEARTBEAT_POLL_PERIOD_MS));
+    (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS));
 #endif
 
     return 0;
