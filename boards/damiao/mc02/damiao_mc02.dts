@@ -245,6 +245,8 @@
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
              <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
+    reg = <0x4000a000 0x400>, <0x4000ac00 0x2800>;
+    bosch,mram-cfg = <0x0 1 0 32 0 0 32 32>;
     pinctrl-0 = <&fdcan1_rx_pd0 &fdcan1_tx_pd1>;
     pinctrl-names = "default";
 };
@@ -253,6 +255,8 @@
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
              <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
+    reg = <0x4000a400 0x400>, <0x4000ac00 0x2800>;
+    bosch,mram-cfg = <0x600 1 0 32 0 0 32 32>;
     pinctrl-0 = <&fdcan2_rx_pb5 &fdcan2_tx_pb6>;
     pinctrl-names = "default";
 };
@@ -261,6 +265,8 @@
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1_2, 8U)>,
              <&rcc STM32_SRC_PLL2_Q FDCAN_SEL(2)>;
+    reg = <0x4000d400 0x400>, <0x4000ac00 0x2800>;
+    bosch,mram-cfg = <0xc00 1 0 32 0 0 32 32>;
     pinctrl-0 = <&fdcan3_rx_pd12 &fdcan3_tx_pd13>;
     pinctrl-names = "default";
 };
