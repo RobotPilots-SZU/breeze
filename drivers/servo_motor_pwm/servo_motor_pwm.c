@@ -28,8 +28,8 @@ typedef struct servo_motor_pwm_cfg {
 } servo_motor_pwm_cfg_t;
 
 typedef struct servo_motor_pwm_data {
-    float current_angle;
-    float real_angle;
+    float logical_angle;
+    float mechanical_angle;
     float up_angle;
     float down_angle;
     float offset_angle;
@@ -66,12 +66,13 @@ static int servo_mechanical_limit_angle_fn(const struct device *servo, float up_
 }
 
 /**
- * @brief Set the offset angle of the servo motor. (real_angle = current_angle + offset_angle)
+ * @brief Set the offset angle of the servo motor. 
+ *        (mechanical_angle = logical_angle + offset_angle)
  * @param servo servo motor device
  * @param offset_angle offset angle in degrees
  * @retval int 0 on success, negative error code on failure.
  */
-static int servo_offset_angle_fn(const struct device *servo, float offset_angle)
+static int servo_set_offset_angle_fn(const struct device *servo, float offset_angle)
 {
     const servo_motor_pwm_cfg_t *cfg = servo->config;
     servo_motor_pwm_data_t *data = servo->data;
@@ -83,8 +84,8 @@ static int servo_offset_angle_fn(const struct device *servo, float offset_angle)
         return -EINVAL;
     }
     data->offset_angle = offset_angle;
-    data->current_angle = (float)cfg->min_angle + data->offset_angle;
-    data->real_angle = (float)cfg->min_angle;
+    data->logical_angle = (float)0;
+    data->mechanical_angle = (float)data->logical_angle + offset_angle;
     
     LOG_INF("Offset angle set: %f", (double)offset_angle);
     return 0;
@@ -116,9 +117,9 @@ static int servo_set_angle_fn(const struct device *servo, float angle)
     uint32_t pulse = angle_to_pulse(servo, output_angle);
     int ret = pwm_set_pulse_dt(&cfg->pwm, pulse);
     if (ret == 0) {
-        data->current_angle = angle;
-        data->real_angle = output_angle;
-        LOG_DBG("Set angle to %f (pulse %u ns)", (double)angle, pulse);
+        data->logical_angle = output_angle - (float)data->offset_angle;
+        data->mechanical_angle = output_angle;
+        LOG_DBG("Set angle to %f (pulse %u ns)", (double)(output_angle - data->offset_angle), pulse);
     } 
     else 
     {
@@ -138,10 +139,11 @@ static int servo_set_angle_fn(const struct device *servo, float angle)
  */
 static int servo_rotate_angle_fn(const struct device *servo, int8_t direction, float rotate_angle)
 {
+    const servo_motor_pwm_cfg_t *cfg = servo->config;
     servo_motor_pwm_data_t *data = servo->data;
 
     int8_t dir = direction;
-    float target_angle = dir * rotate_angle + data->current_angle;
+    float target_angle = dir * rotate_angle + data->logical_angle;
     float output_angle = target_angle + data->offset_angle;
 
     if ((dir != 1) && (dir != -1))
@@ -163,17 +165,24 @@ static int servo_rotate_angle_fn(const struct device *servo, int8_t direction, f
         output_angle = data->down_angle;
     }
 
-    data->current_angle = target_angle;
-    data->real_angle = output_angle;
-        LOG_DBG("Rotating angle by %f degrees to target %f (real angle %f)",
-            (double)(dir * rotate_angle), (double)target_angle, (double)data->real_angle);
-
-    return servo_set_angle_fn(servo, target_angle);
+    uint32_t pulse = angle_to_pulse(servo, output_angle);
+    int ret = pwm_set_pulse_dt(&cfg->pwm, pulse);
+    if (ret == 0) {
+        data->logical_angle = target_angle;
+        data->mechanical_angle = output_angle;
+        LOG_DBG("Rotating angle by %f degrees to target %f (mechanical angle %f)",
+            (double)(dir * rotate_angle), (double)target_angle, (double)data->mechanical_angle);
+    } 
+    else 
+    {
+        LOG_ERR("Failed to rotate angle (err %d)", ret);
+    }
+    return ret;
 }
 
 static const struct servo_motor_pwm_api servo_pwm_api = {
     .mechanical_limit_angle = servo_mechanical_limit_angle_fn,
-    .offset_angle = servo_offset_angle_fn,
+    .offset_angle = servo_set_offset_angle_fn,
     .set_angle = servo_set_angle_fn,
     .rotate_angle = servo_rotate_angle_fn,
 };
@@ -241,8 +250,8 @@ static int servo_motor_pwm_init(const struct device *servo)
     data->offset_angle = 0;
     data->down_angle = cfg->min_angle;
     data->up_angle = cfg->max_angle;
-    data->current_angle = cfg->min_angle;
-    data->real_angle = cfg->min_angle;
+    data->logical_angle = cfg->min_angle;
+    data->mechanical_angle = cfg->min_angle;
 
     return 0;
 }
@@ -253,8 +262,8 @@ static int servo_motor_pwm_init(const struct device *servo)
                  "min-pulse must be less than max-pulse");                      \
     \
     static servo_motor_pwm_data_t servo_data_##inst = { \
-        .current_angle = 0,                             \
-        .real_angle = 0,                                \
+        .logical_angle = 0,                             \
+        .mechanical_angle = 0,                          \
         .up_angle = 0,                                  \
         .down_angle = 0,                                \
         .offset_angle = 0,                              \
