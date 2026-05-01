@@ -7,7 +7,7 @@
 #ifndef DJI_PROTOCOL_H
 #define DJI_PROTOCOL_H
 
-#include <drivers/motor.h>
+#include <drivers/motor/motor.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>

@@ -81,7 +81,7 @@ typedef int (*motor_lk_single_closedloop_control)(const struct device *dev, int1
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_speedctrl)(const struct device *dev, int32_t speedControl, int16_t iqcontrol);
+typedef int (*motor_lk_single_speedctrl)(const struct device *dev, double TargetspeedControl, int16_t iqcontrol);
 
 /**
  * @brief 多圈位置闭环控制命令1，对应实际位置为0.01degree/LSB,也就是36000代表360°
@@ -90,7 +90,7 @@ typedef int (*motor_lk_single_speedctrl)(const struct device *dev, int32_t speed
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_mulposctrl1)(const struct device *dev, int32_t angleControl);
+typedef int (*motor_lk_single_mulposctrl1)(const struct device *dev, double Targetangle);
 
 /**
  * @brief 多圈位置闭环控制命令2，带有速度限制，对应实际位置为0.01degree/LSB,也就是36000代表360°，
@@ -102,7 +102,7 @@ typedef int (*motor_lk_single_mulposctrl1)(const struct device *dev, int32_t ang
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_mulposctrl2)(const struct device *dev, int32_t angleControl, uint16_t maxSpeed);
+typedef int (*motor_lk_single_mulposctrl2)(const struct device *dev, double Targetangle, double TargetmaxSpeed);
 
 /*
  * @brief 单圈位置闭环控制命令1，对应实际位置为0.01degree/LSB,也就是36000代表360°，带有转向参数。
@@ -112,7 +112,7 @@ typedef int (*motor_lk_single_mulposctrl2)(const struct device *dev, int32_t ang
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_sigposctrl1)(const struct device *dev, bool spindir, uint32_t angleControl);
+typedef int (*motor_lk_single_sigposctrl1)(const struct device *dev, bool spindir, double Targetangle);
 
 /**
  * @brief 单圈位置闭环控制命令2，对应实际位置为0.01degree/LSB,也就是36000代表360°，带有转向参数和速度限制。
@@ -123,7 +123,7 @@ typedef int (*motor_lk_single_sigposctrl1)(const struct device *dev, bool spindi
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_sigposctrl2)(const struct device *dev, bool spindir, uint32_t angleControl, uint16_t maxSpeed);
+typedef int (*motor_lk_single_sigposctrl2)(const struct device *dev, bool spindir, double Targetangle, double TargetmaxSpeed);
 
 /**
  * @brief 增量位置闭环控制命令1，对应实际增量位置为0.01degree/LSB,也就是36000代表360°
@@ -132,7 +132,7 @@ typedef int (*motor_lk_single_sigposctrl2)(const struct device *dev, bool spindi
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_increposctrl1)(const struct device *dev, int32_t angleIncre);
+typedef int (*motor_lk_single_increposctrl1)(const struct device *dev, double angleIncre);
 
 /**
  * @brief 增量位置闭环控制命令2，对应实际增量位置为0.01degree/LSB,也就是36000代表360°，带有速度限制
@@ -142,7 +142,7 @@ typedef int (*motor_lk_single_increposctrl1)(const struct device *dev, int32_t a
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_increposctrl2)(const struct device *dev, int32_t angleIncre, uint16_t maxSpeed);
+typedef int (*motor_lk_single_increposctrl2)(const struct device *dev, double angleIncre, double TargetmaxSpeed);
 
 /**
  * @brief 多电机的速度控制命令，speedValue的范围是-32768 ~ 32767dps，分辨率是1dps/LSB
@@ -151,7 +151,7 @@ typedef int (*motor_lk_single_increposctrl2)(const struct device *dev, int32_t a
  * @param speedValue 
  * @return int 
  */
-typedef int (*motor_lk_multi_speedctrl)(const struct device *dev, int16_t speedValue);
+typedef int (*motor_lk_multi_speedctrl)(const struct device *dev, double TargetspeedValue);
 
 /**
  * @brief 多电机的位置控制命令，angleValue的范围是-32768 ~ 32767dps，分辨率是0.01degree/LSB，也就是36000代表360°，
@@ -160,7 +160,7 @@ typedef int (*motor_lk_multi_speedctrl)(const struct device *dev, int16_t speedV
  * @param angleValue 
  * @return int 
  */
-typedef int (*motor_lk_multi_positctrl)(const struct device *dev, int32_t angleValue);
+typedef int (*motor_lk_multi_positctrl)(const struct device *dev, double TargetangleValue);
 
 /**
  * @brief 多电机下的混合命令，motor_cmd就是单电机下的控制命令

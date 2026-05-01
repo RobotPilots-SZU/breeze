@@ -13,7 +13,7 @@ extern "C"
     typedef struct smotor_heartbeat_status_t
     {
         uint64_t heartbeat_tick; // 心跳时间戳
-        uint64_t probe_tick;     // 心跳探测时间戳
+        // uint64_t probe_tick;     // 心跳探测时间戳
         bool is_alive;           // 心跳状态
     } smotor_heartbeat_status_t;
 

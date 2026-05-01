@@ -2,8 +2,10 @@
 zephyr_library()
 zephyr_library_sources(
   ./dji/can_dji.c
+  ./lk/can_lk.c
 )
 
 zephyr_include_directories(
   ./dji
+  ./lk
 )

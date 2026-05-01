@@ -3,35 +3,35 @@
     can_rx_mgr1: can_rx_mgr1 {
         compatible = "rp,can-rx-manager";
         status = "okay";
-        can-bus = <&fdcan1>;
+        can-bus = <&can1>;
         label = "can_rx_mgr1";
     };
 
     can_tx_mgr1: can_tx_mgr1 {
         compatible = "rp,can-tx-manager";
         status = "okay";
-        can-bus = <&fdcan1>;
+        can-bus = <&can1>;
         label = "can_tx_mgr1";
     };
 
     can_rx_mgr2: can_rx_mgr2 {
         compatible = "rp,can-rx-manager";
         status = "okay";
-        can-bus = <&fdcan2>;
+        can-bus = <&can2>;
         label = "can_rx_mgr2";
     };
 
     can_tx_mgr2: can_tx_mgr2 {
         compatible = "rp,can-tx-manager";
         status = "okay";
-        can-bus = <&fdcan2>;
+        can-bus = <&can2>;
         label = "can_tx_mgr2";
     };
 
     chassis_FL:motor1{
         compatible = "rp,dji-can-motor";
         status = "okay";
-        can-bus = <&fdcan2>;
+        can-bus = <&can2>;
         rx-manager = <&can_rx_mgr2>;
         tx-manager = <&can_tx_mgr2>;
         tx-id = <0x200>;
@@ -47,7 +47,7 @@
     chassis_FR:motor2{
         compatible = "rp,dji-can-motor";
         status = "okay";
-        can-bus = <&fdcan2>;
+        can-bus = <&can2>;
         rx-manager = <&can_rx_mgr2>;
         tx-manager = <&can_tx_mgr2>;
         tx-id = <0x200>;
@@ -63,7 +63,7 @@
     arm_joint1:motor3{
         compatible = "rp,lk-can-motor";
         status = "okay";
-        can-bus = <&fdcan2>;
+        can-bus = <&can2>;
         rx-manager = <&can_rx_mgr2>;
         tx-manager = <&can_tx_mgr2>;
         tx-id = <0x141>;
