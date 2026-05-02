@@ -39,15 +39,9 @@
         default-volume = <50>;
     };
 
-    remote: remote0 {
-        status = "okay";
-        compatible = "rp,remote";
-        uart = <&uart5>;
-    };
     aliases {
         sw0 = &user_button;
         buzzer0 = &buzzer;
-        remote0 = &remote;
     };
 };
 
