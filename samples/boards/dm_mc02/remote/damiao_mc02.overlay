@@ -1,0 +1,10 @@
+/ {
+    remote: remote0 {
+        status = "okay";
+        compatible = "rp,remote";
+        uart = <&uart5>;
+    };
+    aliases {
+        remote0 = &remote;
+    };
+};
