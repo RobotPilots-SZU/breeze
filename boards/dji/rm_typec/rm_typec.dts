@@ -116,7 +116,7 @@
     stop-bits = "1";
     data-bits = <8>;
     parity = "none";
-    dma-names = "usart1-tx", "usart1-rx";
+    dma-names = "tx", "rx";
     pinctrl-names = "default";
     current-speed = <921600>;
     status = "okay";
@@ -129,7 +129,7 @@
     stop-bits = "1";
     data-bits = <8>;
     parity = "none";
-    dma-names = "usart3-tx", "usart3-rx";
+    dma-names = "tx", "rx";
     pinctrl-names = "default";
     current-speed = <100000>;
     status = "okay";
@@ -142,7 +142,7 @@
     stop-bits = "1";
     data-bits = <8>;
     parity = "none";
-    dma-names = "usart6-tx", "usart6-rx";
+    dma-names = "tx", "rx";
     pinctrl-names = "default";
     current-speed = <115200>;
     status = "okay";
