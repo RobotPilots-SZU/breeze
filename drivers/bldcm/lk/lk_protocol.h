@@ -1,13 +1,13 @@
 #ifndef LK_PROTOCOL_H
 #define LK_PROTOCOL_H
 
-#include <drivers/motor/motor.h>
+#include <drivers/bldcm/bldcm_lk.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/drivers/can.h>
 
-#define LOG_LEVEL CONFIG_MOTOR_LOG_LEVEL
+#define LOG_LEVEL CONFIG_BLDCM_LOG_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(motor_lk_can);
 
@@ -18,11 +18,11 @@ LOG_MODULE_REGISTER(motor_lk_can);
 #include <drivers/can_tx_manager.h>
 #endif
 
-#ifndef CONFIG_MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS
-#define CONFIG_MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS 100
+#ifndef CONFIG_BLDCM_HEARTBEAT_OFFLINE_TIMEOUT_MS
+#define CONFIG_BLDCM_HEARTBEAT_OFFLINE_TIMEOUT_MS 100
 #endif
-#ifndef CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS
-#define CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS 10
+#ifndef CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS
+#define CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS 10
 #endif
 
 #define MGMF_CURRENT_MAX 2000
@@ -109,7 +109,7 @@ typedef struct motor_lk_data {
 	int rxmanager_slot_id; // CAN RX管理器 槽位ID
 #endif
 
-#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_BLDCM_HEARTBEAT_AUTOCHECK)
 	const struct device *dev_self;   // 指向自身设备的指针，用于心跳自动检测
 	struct k_work_delayable hb_work; // 心跳自动检测的延时工作
 #endif

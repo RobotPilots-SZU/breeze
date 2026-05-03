@@ -28,7 +28,7 @@
         label = "can_tx_mgr2";
     };
 
-    chassis_FL:motor1{
+    chassis_fl:motor1{
         compatible = "rp,dji-can-motor";
         status = "okay";
         can-bus = <&fdcan2>;
@@ -44,7 +44,7 @@
         motor-transmission-ratio = <19>;
     };
 
-    chassis_FR:motor2{
+    chassis_fr:motor2{
         compatible = "rp,dji-can-motor";
         status = "okay";
         can-bus = <&fdcan2>;

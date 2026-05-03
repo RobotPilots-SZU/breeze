@@ -4,7 +4,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/printk.h>
 
-#include <drivers/motor/motor.h>
+#include <drivers/bldcm/bldcm.h>
 #ifdef CONFIG_CAN_TX_MANAGER
 #include <drivers/can_tx_manager.h>
 #endif
@@ -34,9 +34,9 @@ static const float ANGLE_STEP = 0.1f; // 每次调用的角度步长（控制正
 int main(void)
 {
     LOG_INF("[app] start");
-    const struct device *motor_fl = DEVICE_DT_GET(CHASSIS_FL_NODE);
-    const struct device *motor_fr = DEVICE_DT_GET(CHASSIS_FR_NODE);
-    const struct device *arm_joint1 = DEVICE_DT_GET(ARM_JOINT1_NODE);
+    const struct device *motor_fl = device_get_binding("chassis_fl");
+    const struct device *motor_fr = device_get_binding("chassis_fr");
+    const struct device *arm_joint1 = device_get_binding("arm_joint1");
 #ifdef CONFIG_CAN_RX_MANAGER
     const struct device *rx_mgr   = DEVICE_DT_GET(RX_MANAGER_NODE);
 #endif

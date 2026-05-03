@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 description:
-  Custom CAN-controlled DJI motor device.
+  Custom CAN-controlled DJI Brushless Direct Current Motor device.
 
 
 compatible: "rp,dji-can-motor"

@@ -23,7 +23,7 @@ int motor_lk_can_heartbeat_probe(const struct device *dev);
  * @brief 心跳自动检测工作处理函数
  *
  */
-#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_BLDCM_HEARTBEAT_AUTOCHECK)
 static void motor_lk_hb_work_handler(struct k_work *work)
 {
 	struct k_work_delayable *dwork =
@@ -36,7 +36,7 @@ static void motor_lk_hb_work_handler(struct k_work *work)
 		(void)motor_lk_update_heartbeat_status(data->dev_self);
 		(void)k_work_schedule(
 			&data->hb_work,
-			K_MSEC(CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS)); // 重新调度下一次心跳检测
+			K_MSEC(CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS)); // 重新调度下一次心跳检测
 	}
 }
 #endif
@@ -398,7 +398,7 @@ int motor_lk_update_heartbeat_status(const struct device *dev)
 	// }
 	elapsed = current_tick - last_tick;
 	/* 如果超过阈值没有收到心跳，则认为电机掉线：清零接收值并在离线边沿告警一次 */
-	if (elapsed > (uint64_t)CONFIG_MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS) {
+	if (elapsed > (uint64_t)CONFIG_BLDCM_HEARTBEAT_OFFLINE_TIMEOUT_MS) {
 		data->motor_data.heartbeat_status.is_alive = false;
 
 		/* 只有从在线->离线时，才清零并告警；避免每次轮询刷屏 */
@@ -498,6 +498,22 @@ static const motor_lk_single_data_t *motor_lk_can_get_single_data(const struct d
 	return data->single_data;
 }
 
+const lk_special_api_t motor_lk_can_special_api = {
+	.get_single_data = motor_lk_can_get_single_data,
+	.single_openloop_control = motor_lk_single_openloopcontrol,
+	.single_closedloop_control = motor_lk_single_closedloopcontrol,
+	.single_speedcontrol = motor_lk_single_speedcontrol,
+	.single_mulposctrl1 = motor_lk_single_mulposcontrol1,
+	.single_mulposctrl2 = motor_lk_single_mulposcontrol2,
+	.single_sigposctrl1 = motor_lk_single_sigposcontrol1,
+	.single_sigposctrl2 = motor_lk_single_sigposcontrol2,
+	.single_increposctrl1 = motor_lk_single_increposcontrol1,
+	.single_increposctrl2 = motor_lk_single_increposcontrol2,
+	.multi_speedcontrol = motor_lk_multi_speedcontrol,
+	.multi_positcontrol = motor_lk_multi_positcontrol,
+	.multi_mixcontrol = motor_lk_multi_mixcontrol,
+};
+
 
 const motor_driver_api_t motor_lk_can_api = {
     .register_motor = motor_lk_can_register_motor,
@@ -509,19 +525,7 @@ const motor_driver_api_t motor_lk_can_api = {
 	.disable = motor_lk_disable,
 	.enable = motor_lk_enable,
 	.stop = motor_lk_stop,
-	.lk_api.get_single_data = motor_lk_can_get_single_data,
-	.lk_api.single_openloop_control = motor_lk_single_openloopcontrol,
-	.lk_api.single_closedloop_control = motor_lk_single_closedloopcontrol,
-	.lk_api.single_speedcontrol = motor_lk_single_speedcontrol,
-	.lk_api.single_mulposctrl1 = motor_lk_single_mulposcontrol1,
-	.lk_api.single_mulposctrl2 = motor_lk_single_mulposcontrol2,
-	.lk_api.single_sigposctrl1 = motor_lk_single_sigposcontrol1,
-	.lk_api.single_sigposctrl2 = motor_lk_single_sigposcontrol2,
-	.lk_api.single_increposctrl1 = motor_lk_single_increposcontrol1,
-	.lk_api.single_increposctrl2 = motor_lk_single_increposcontrol2,
-	.lk_api.multi_speedcontrol = motor_lk_multi_speedcontrol,
-	.lk_api.multi_positcontrol = motor_lk_multi_positcontrol,
-	.lk_api.multi_mixcontrol = motor_lk_multi_mixcontrol,
+	.lk_api = &motor_lk_can_special_api,
 };
 
 /**
@@ -565,10 +569,10 @@ int motor_lk_can_init(const struct device *dev)
 	data->motor_data.heartbeat_status.is_alive = false;
 	data->motor_data.heartbeat_status.heartbeat_tick = 0;
 
-#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_BLDCM_HEARTBEAT_AUTOCHECK)
 	data->dev_self = dev;
 	k_work_init_delayable(&data->hb_work, motor_lk_hb_work_handler);
-	(void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS));
+	(void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS));
 #endif
 
 	return 0;
@@ -610,7 +614,7 @@ int motor_lk_can_init(const struct device *dev)
 		.Tx_feq = (uint16_t)DT_INST_PROP(inst, tx_feq),                                    \
 	};                                                                                         \
 	DEVICE_DT_INST_DEFINE(inst, motor_lk_can_init, NULL, &motor_lk_data_##inst,              \
-			      &motor_lk_cfg_##inst, POST_KERNEL, CONFIG_MOTOR_INIT_PRIORITY,      \
+			      &motor_lk_cfg_##inst, POST_KERNEL, CONFIG_BLDCM_INIT_PRIORITY,      \
 			      &motor_lk_can_api);
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
