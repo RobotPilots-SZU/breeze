@@ -73,6 +73,10 @@ int rp_can_tx_manager_init(const struct device *dev)
         return -EINVAL;
     }
 
+    can_stop(cfg->can_dev);
+    can_set_mode(cfg->can_dev, CAN_MODE_NORMAL | CAN_MODE_ONE_SHOT);    // 关闭自动重发
+    can_start(cfg->can_dev);
+
     (void)cfg;
     memset(&data->sender_list, 0, sizeof(data->sender_list));
     memset(&data->can_items, 0, sizeof(data->can_items));
