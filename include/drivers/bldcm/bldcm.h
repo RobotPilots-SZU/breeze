@@ -127,7 +127,7 @@ extern "C"
 
     typedef int (*motor_api_stop)(const struct device *dev);
 
-    typedef struct lk_special_api_t lk_special_api_t;
+    typedef struct lk_special_api lk_special_api_t;
     typedef struct motor_driver_api_t
     {
         motor_api_register register_motor;
@@ -140,7 +140,7 @@ extern "C"
         motor_api_enable enable;
         motor_api_stop stop;
         union{
-            lk_special_api_t *lk_api;
+            const lk_special_api_t *lk_api;
         };
     } motor_driver_api_t;
 

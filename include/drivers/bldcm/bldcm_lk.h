@@ -39,32 +39,6 @@ typedef struct motor_lk_single_data {
     uint32_t circleAngle;               // 单圈电机角度值，数值范围0~36000*减速比-1，单位0.01°/LSB
 } motor_lk_single_data_t;
 
-typedef struct lk_special_api
-{
-    motor_lk_get_single_data get_single_data;
-    motor_lk_wparam_anglepid writeparam_anglepid;
-    motor_lk_wparam_speedpid writeparam_speedpid;
-    motor_lk_wparam_currentpid writeparam_currentpid;
-    motor_lk_wparam_torquelimit writeparam_torquelimit;
-    motor_lk_wparam_speedlimit writeparam_speedlimit;
-    motor_lk_wparam_anglelimit writeparam_anglelimit;
-    motor_lk_wparam_currentramp writeparam_currentramp;
-    motor_lk_wparam_speedramp writeparam_speedramp;
-    motor_lk_single_openloop_control single_openloop_control;
-    motor_lk_single_closedloop_control single_closedloop_control;
-    motor_lk_single_speedctrl single_speedcontrol;
-    motor_lk_single_mulposctrl1 single_mulposctrl1;
-    motor_lk_single_mulposctrl2 single_mulposctrl2;
-    motor_lk_single_sigposctrl1 single_sigposctrl1;
-    motor_lk_single_sigposctrl2 single_sigposctrl2;
-    motor_lk_single_increposctrl1 single_increposctrl1;
-    motor_lk_single_increposctrl2 single_increposctrl2;
-    motor_lk_multi_speedctrl multi_speedcontrol;
-    motor_lk_multi_positctrl multi_positcontrol;
-    motor_lk_multi_mixctrl multi_mixcontrol;
-}lk_special_api_t;
-
-
 typedef const motor_lk_single_data_t *(*motor_lk_get_single_data)(const struct device *dev);
 
 typedef int (*motor_lk_wparam_anglepid)(const struct device *dev, int16_t angleKp, int16_t angleKi, int16_t angleKd);
@@ -202,6 +176,31 @@ typedef int (*motor_lk_multi_positctrl)(const struct device *dev, double Targeta
  * @return int 
  */
 typedef int (*motor_lk_multi_mixctrl)(const struct device *dev, uint16_t motor_cmd);
+
+struct lk_special_api
+{
+    motor_lk_get_single_data get_single_data;
+    motor_lk_wparam_anglepid writeparam_anglepid;
+    motor_lk_wparam_speedpid writeparam_speedpid;
+    motor_lk_wparam_currentpid writeparam_currentpid;
+    motor_lk_wparam_torquelimit writeparam_torquelimit;
+    motor_lk_wparam_speedlimit writeparam_speedlimit;
+    motor_lk_wparam_anglelimit writeparam_anglelimit;
+    motor_lk_wparam_currentramp writeparam_currentramp;
+    motor_lk_wparam_speedramp writeparam_speedramp;
+    motor_lk_single_openloop_control single_openloop_control;
+    motor_lk_single_closedloop_control single_closedloop_control;
+    motor_lk_single_speedctrl single_speedcontrol;
+    motor_lk_single_mulposctrl1 single_mulposctrl1;
+    motor_lk_single_mulposctrl2 single_mulposctrl2;
+    motor_lk_single_sigposctrl1 single_sigposctrl1;
+    motor_lk_single_sigposctrl2 single_sigposctrl2;
+    motor_lk_single_increposctrl1 single_increposctrl1;
+    motor_lk_single_increposctrl2 single_increposctrl2;
+    motor_lk_multi_speedctrl multi_speedcontrol;
+    motor_lk_multi_positctrl multi_positcontrol;
+    motor_lk_multi_mixctrl multi_mixcontrol;
+};
 
 
 /*-----------------------------------------------------------------------lk special API------------------------------------------------*/    
