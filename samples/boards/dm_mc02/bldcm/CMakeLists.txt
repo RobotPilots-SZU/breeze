@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(Python3_EXECUTABLE "$ENV{WEST_PYTHON}" CACHE FILEPATH "Python 3 interpreter")
 if(NOT DEFINED BOARD)
 	set(BOARD damiao_mc02)
 endif()
