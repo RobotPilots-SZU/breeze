@@ -1,5 +1,0 @@
-# Copyright (c) 2025 RobotPilots-SZU
-# SPDX-License-Identifier: Apache-2.0
-
-source "Kconfig.zephyr"
-source "../../breeze/drivers/servo_motor_pwm/Kconfig"

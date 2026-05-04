@@ -17,6 +17,14 @@
     };
 };
 
+&gpioc {
+    pc15_hog {
+        gpio-hog;
+        gpios = <15 GPIO_ACTIVE_HIGH>;	//使能喵板PWM 5V
+        output-high;
+    };
+};
+
 / {
     servo_180: servo_180 {
         compatible = "rp,servo-motor-pwm";
