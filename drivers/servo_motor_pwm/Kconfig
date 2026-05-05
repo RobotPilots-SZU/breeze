@@ -1,0 +1,27 @@
+# Copyright (c) 2025 RobotPilots
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SERVO_MOTOR_PWM
+    bool "Servo Motor PWM drivers"
+    default n
+    depends on PWM
+    help
+      Enable PWM-based servo motor driver.
+
+if SERVO_MOTOR_PWM
+
+config SERVO_INIT_PRIORITY
+    int "Init priority"
+    default 92
+    range 0 99
+    help
+      Initialization priority for servo motor PWM driver.
+
+config SERVO_MOTOR_PWM_LOG_LEVEL
+    int "Servo log level"
+    default 3
+    range 0 4
+    help
+      0 = LOG_LEVEL_NONE, 1 = ERR, 2 = WRN, 3 = INF, 4 = DBG
+
+endif # SERVO_MOTOR_PWM

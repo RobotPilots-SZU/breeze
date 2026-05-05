@@ -1,3 +1,6 @@
+# Copyright (c) 2025 RobotPilots-SZU
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.20)
 
 # check BOARD variable
@@ -12,7 +15,7 @@ endif()
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 # define cmake project
-project(watchdog)
+project(servo-motor-pwm)
 
 target_sources(app PRIVATE
     ./src/main.cpp
