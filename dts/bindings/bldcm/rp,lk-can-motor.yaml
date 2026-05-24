@@ -84,7 +84,7 @@ properties:
     type: int
     required: true
     description: |
-      Frequency (in Hz) at which to send commands to the motor. 0 means manaual send only.
+      Frequency (in Hz) at which to send commands to the motor. 0 means manual send only.
 
   control-mode:
     type: string

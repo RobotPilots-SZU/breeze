@@ -1,3 +1,6 @@
+#ifndef __BREEZE_DRIVERS_BLDCM_H__
+#define __BREEZE_DRIVERS_BLDCM_H__
+
 #include <zephyr/device.h>
 #include <math.h>
 #include <errno.h>
@@ -229,3 +232,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* __BREEZE_DRIVERS_BLDCM_H__ */

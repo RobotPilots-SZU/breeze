@@ -4,8 +4,8 @@
  * author: Sassinak
  */
 
-#ifndef CAN_RX_MANAGER_H_
-#define CAN_RX_MANAGER_H_
+#ifndef __BREEZE_DRIVER_CAN_RX_MANAGER_H_
+#define __BREEZE_DRIVER_CAN_RX_MANAGER_H_
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/can.h>
@@ -110,4 +110,4 @@ static inline float can_rx_manager_calculate_load(const struct device *mgr, uint
 }
 #endif
 
-#endif /* CAN_RX_MANAGER_H_ */
+#endif /* BREEZE_DRIVER_CAN_RX_MANAGER_H_ */

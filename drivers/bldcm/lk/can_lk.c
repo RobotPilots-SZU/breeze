@@ -179,11 +179,12 @@ static int motor_lk_can_tx_fillbuffer_handler(struct can_frame *frame, void *use
 		return -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&data->lock); // 加锁保护 motor_data
+	 // 加锁保护 motor_data
 	switch(cfg->control_mode)
 	{
 		case 0:             // 多电机控制模式, 只有多电机控制模式下才需要特殊处理
 		{
+			k_spinlock_key_t key = k_spin_lock(&data->lock);
 			frame->dlc = 8;
 			frame->flags = 0;
 			int diff = cfg->rx_id % 10;
@@ -209,11 +210,16 @@ static int motor_lk_can_tx_fillbuffer_handler(struct can_frame *frame, void *use
 			return 0;
 		}
 		case 1:                // 单电机控制模式，直接按字节发送
+		{	k_spinlock_key_t key = k_spin_lock(&data->lock);
 			memcpy(&frame->data[0], &data->motor_data.tx_data[0], 8);
 			k_spin_unlock(&data->lock, key);
 			return 0;
+		}
+		default:
+		{	LOG_ERR("[lk_motor_err] tx handle invalid control mode: %d", cfg->control_mode);
+			return -EINVAL;
+		}
 	}
-	k_spin_unlock(&data->lock, key);
 	return 0;
 }
 #endif
@@ -512,6 +518,14 @@ const lk_special_api_t motor_lk_can_special_api = {
 	.multi_speedcontrol = motor_lk_multi_speedcontrol,
 	.multi_positcontrol = motor_lk_multi_positcontrol,
 	.multi_mixcontrol = motor_lk_multi_mixcontrol,
+	.writeparam_anglepid = motor_lk_writeparam_anglepid,
+	.writeparam_speedpid = motor_lk_writeparam_speedpid,
+	.writeparam_currentpid = motor_lk_writeparam_currentpid,
+	.writeparam_torquelimit = motor_lk_writeparam_torquelimit,
+	.writeparam_speedlimit = motor_lk_writeparam_speedlimit,
+	.writeparam_anglelimit = motor_lk_writeparam_anglelimit,
+	.writeparam_currentramp = motor_lk_writeparam_currentramp,
+	.writeparam_speedramp = motor_lk_writeparam_speedramp,
 };
 
 

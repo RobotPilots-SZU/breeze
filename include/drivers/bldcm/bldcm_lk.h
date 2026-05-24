@@ -1,3 +1,6 @@
+#ifndef __BREEZE_DRIVERS_BLDCM_LK_H__
+#define __BREEZE_DRIVERS_BLDCM_LK_H__
+
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -95,7 +98,7 @@ typedef int (*motor_lk_single_speedctrl)(const struct device *dev, double Target
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_mulposctrl1)(const struct device *dev, double Targetangle);
+typedef int (*motor_lk_single_mulposctrl1)(const struct device *dev, double TargetAngle);
 
 /**
  * @brief 多圈位置闭环控制命令2，带有速度限制，对应实际位置为0.01degree/LSB,也就是36000代表360°，
@@ -107,7 +110,7 @@ typedef int (*motor_lk_single_mulposctrl1)(const struct device *dev, double Targ
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_mulposctrl2)(const struct device *dev, double Targetangle, double TargetmaxSpeed);
+typedef int (*motor_lk_single_mulposctrl2)(const struct device *dev, double TargetAngle, double TargetmaxSpeed);
 
 /*
  * @brief 单圈位置闭环控制命令1，对应实际位置为0.01degree/LSB,也就是36000代表360°，带有转向参数。
@@ -117,7 +120,7 @@ typedef int (*motor_lk_single_mulposctrl2)(const struct device *dev, double Targ
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_sigposctrl1)(const struct device *dev, bool spindir, double Targetangle);
+typedef int (*motor_lk_single_sigposctrl1)(const struct device *dev, bool spindir, double TargetAngle);
 
 /**
  * @brief 单圈位置闭环控制命令2，对应实际位置为0.01degree/LSB,也就是36000代表360°，带有转向参数和速度限制。
@@ -128,7 +131,7 @@ typedef int (*motor_lk_single_sigposctrl1)(const struct device *dev, bool spindi
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_sigposctrl2)(const struct device *dev, bool spindir, double Targetangle, double TargetmaxSpeed);
+typedef int (*motor_lk_single_sigposctrl2)(const struct device *dev, bool spindir, double TargetAngle, double TargetmaxSpeed);
 
 /**
  * @brief 增量位置闭环控制命令1，对应实际增量位置为0.01degree/LSB,也就是36000代表360°
@@ -137,7 +140,7 @@ typedef int (*motor_lk_single_sigposctrl2)(const struct device *dev, bool spindi
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_increposctrl1)(const struct device *dev, double angleIncre);
+typedef int (*motor_lk_single_increposctrl1)(const struct device *dev, double TargetAngleIncre);
 
 /**
  * @brief 增量位置闭环控制命令2，对应实际增量位置为0.01degree/LSB,也就是36000代表360°，带有速度限制
@@ -147,7 +150,7 @@ typedef int (*motor_lk_single_increposctrl1)(const struct device *dev, double an
  * @param frame
  * @return int
  */
-typedef int (*motor_lk_single_increposctrl2)(const struct device *dev, double angleIncre, double TargetmaxSpeed);
+typedef int (*motor_lk_single_increposctrl2)(const struct device *dev, double TargetAngleIncre, double TargetmaxSpeed);
 
 /**
  * @brief 多电机的速度控制命令，speedValue的范围是-32768 ~ 32767dps，分辨率是1dps/LSB
@@ -213,7 +216,7 @@ struct lk_special_api
     static inline const motor_lk_single_data_t *get_single_data(const struct device *dev)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->get_single_data == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->get_single_data == NULL) {
             return NULL;
         }
         return api->lk_api->get_single_data(dev);
@@ -222,7 +225,7 @@ struct lk_special_api
     static inline int writeparam_anglepid(const struct device *dev, int16_t angleKp, int16_t angleKi, int16_t angleKd)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_anglepid == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_anglepid == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_anglepid(dev, angleKp, angleKi, angleKd);
@@ -231,7 +234,7 @@ struct lk_special_api
     static inline int writeparam_speedpid(const struct device *dev, int16_t speedKp, int16_t speedKi, int16_t speedKd)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_speedpid == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_speedpid == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_speedpid(dev, speedKp, speedKi, speedKd);
@@ -240,7 +243,7 @@ struct lk_special_api
     static inline int writeparam_currentpid(const struct device *dev, int16_t currentKp, int16_t currentKi, int16_t currentKd)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_currentpid == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_currentpid == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_currentpid(dev, currentKp, currentKi, currentKd);
@@ -249,7 +252,7 @@ struct lk_special_api
     static inline int writeparam_torquelimit(const struct device *dev, int16_t torqueLimit)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_torquelimit == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_torquelimit == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_torquelimit(dev, torqueLimit);
@@ -258,7 +261,7 @@ struct lk_special_api
     static inline int writeparam_speedlimit(const struct device *dev, int32_t speedLimit)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_speedlimit == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_speedlimit == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_speedlimit(dev, speedLimit);
@@ -267,7 +270,7 @@ struct lk_special_api
     static inline int writeparam_anglelimit(const struct device *dev, int32_t angleLimit)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_anglelimit == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_anglelimit == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_anglelimit(dev, angleLimit);
@@ -276,7 +279,7 @@ struct lk_special_api
     static inline int writeparam_currentramp(const struct device *dev, int32_t currentRamp)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_currentramp == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_currentramp == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_currentramp(dev, currentRamp);
@@ -286,7 +289,7 @@ struct lk_special_api
     static inline int writeparam_speedramp(const struct device *dev, int32_t speedRamp)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->writeparam_speedramp == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->writeparam_speedramp == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->writeparam_speedramp(dev, speedRamp);
@@ -295,7 +298,7 @@ struct lk_special_api
     static inline int single_openloop_control(const struct device *dev, int16_t powerControl)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_openloop_control == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_openloop_control == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->single_openloop_control(dev, powerControl);
@@ -304,79 +307,79 @@ struct lk_special_api
     static inline int single_closedloop_control(const struct device *dev, int16_t iqcontrol)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_closedloop_control == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_closedloop_control == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->single_closedloop_control(dev, iqcontrol);
     }
 
-    static inline int single_speedcontrol(const struct device *dev, int32_t speedControl, int16_t iqcontrol)
+    static inline int single_speedcontrol(const struct device *dev, double TargetspeedControl, int16_t iqcontrol)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_speedcontrol == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_speedcontrol == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api->single_speedcontrol(dev, speedControl, iqcontrol);
+        return api->lk_api->single_speedcontrol(dev, TargetspeedControl, iqcontrol);
     }
 
-    static inline int single_mulposctrl1(const struct device *dev, int32_t angleControl)
+    static inline int single_mulposctrl1(const struct device *dev, double Targetangle)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_mulposctrl1 == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_mulposctrl1 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api->single_mulposctrl1(dev, angleControl);
+        return api->lk_api->single_mulposctrl1(dev, Targetangle);
     }
 
-    static inline int single_mulposctrl2(const struct device *dev, int32_t angleControl, uint16_t maxSpeed)
+    static inline int single_mulposctrl2(const struct device *dev, double Targetangle, double TargetmaxSpeed)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_mulposctrl2 == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_mulposctrl2 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api->single_mulposctrl2(dev, angleControl, maxSpeed);
+        return api->lk_api->single_mulposctrl2(dev, Targetangle, TargetmaxSpeed);
     }
 
-    static inline int single_sigposctrl1(const struct device *dev, int32_t angleControl, uint8_t direction)
+    static inline int single_sigposctrl1(const struct device *dev, bool direction, double TargetAngle)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_sigposctrl1 == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_sigposctrl1 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api->single_sigposctrl1(dev, angleControl, direction);
+        return api->lk_api->single_sigposctrl1(dev, direction, TargetAngle);
     }
 
-    static inline int single_sigposctrl2(const struct device *dev, int32_t angleControl, uint8_t direction, uint16_t maxSpeed)
+    static inline int single_sigposctrl2(const struct device *dev, bool spindir, double Targetangle, double TargetmaxSpeed)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_sigposctrl2 == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_sigposctrl2 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api->single_sigposctrl2(dev, angleControl, direction, maxSpeed);
+        return api->lk_api->single_sigposctrl2(dev, spindir, Targetangle, TargetmaxSpeed);
     }
 
-    static inline int single_increposctrl1(const struct device *dev, int32_t angleIncre)
+    static inline int single_increposctrl1(const struct device *dev, double TargetangleIncre)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_increposctrl1 == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_increposctrl1 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api->single_increposctrl1(dev, angleIncre);
+        return api->lk_api->single_increposctrl1(dev, TargetangleIncre);
     }
 
-    static inline int single_increposctrl2(const struct device *dev, int32_t angleIncre, uint16_t maxSpeed)
+    static inline int single_increposctrl2(const struct device *dev,double TargetangleIncre, double TargetmaxSpeed)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->single_increposctrl2 == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->single_increposctrl2 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api->single_increposctrl2(dev, angleIncre, maxSpeed);
+        return api->lk_api->single_increposctrl2(dev, TargetangleIncre, TargetmaxSpeed);
     }
 
     static inline int multi_speedcontrol(const struct device *dev, int16_t speedValue)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->multi_speedcontrol == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->multi_speedcontrol == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->multi_speedcontrol(dev, speedValue);
@@ -385,7 +388,7 @@ struct lk_special_api
     static inline int multi_positcontrol(const struct device *dev, int32_t angleValue)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->multi_positcontrol == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->multi_positcontrol == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->multi_positcontrol(dev, angleValue);
@@ -394,7 +397,7 @@ struct lk_special_api
     static inline int multi_mixcontrol(const struct device *dev, uint16_t cmd)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api->multi_mixcontrol == NULL) {
+            if(!api || api->lk_api == NULL || api->lk_api->multi_mixcontrol == NULL) {
             return -ENOSYS;
         }
         return api->lk_api->multi_mixcontrol(dev, cmd);
@@ -402,3 +405,5 @@ struct lk_special_api
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* __BREEZE_DRIVERS_BLDCM_LK_H__ */
