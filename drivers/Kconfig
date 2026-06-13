@@ -1,5 +1,5 @@
 rsource "./buzzer/Kconfig"
-rsource "./motor/Kconfig"
+rsource "./bldcm/Kconfig"
 rsource "./can_tx_manager/Kconfig"
 rsource "./can_rx_manager/Kconfig"
 rsource "./remote/Kconfig"

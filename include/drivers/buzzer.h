@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef DRIVERS_BUZZER_BUZZER_H_
-#define DRIVERS_BUZZER_BUZZER_H_
+#ifndef BREEZE_DRIVERS_BUZZER_H_
+#define BREEZE_DRIVERS_BUZZER_H_
 
 #include <zephyr/types.h>
 #include <errno.h>
@@ -100,4 +100,4 @@ extern "C"
 }
 #endif
 
-#endif /* DRIVERS_BUZZER_BUZZER_H_ */
+#endif /* BREEZE_DRIVERS_BUZZER_H_ */

@@ -4,7 +4,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/printk.h>
 
-#include <drivers/motor.h>
+#include <drivers/bldcm/bldcm.h>
 #ifdef CONFIG_CAN_TX_MANAGER
 #include <drivers/can_tx_manager.h>
 #endif
@@ -18,22 +18,25 @@ LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
 #define MOTOR_3508_CURRENT_MAX 10000
 #define MOTOR_2006_CURRENT_MAX 8000
+#define MOTOR_MG_CURRENT_MAX 2000
 
 #define CHASSIS_FL_NODE DT_NODELABEL(chassis_fl)
 #define CHASSIS_FR_NODE DT_NODELABEL(chassis_fr)
+#define ARM_JOINT1_NODE DT_NODELABEL(arm_joint1)
 #ifdef CONFIG_CAN_RX_MANAGER
 #define RX_MANAGER_NODE DT_NODELABEL(can_rx_mgr1)
 #endif
 
 static float angle_rad = 0.0f;        // 正弦函数的角度（弧度）
 static const float ANGLE_STEP = 0.1f; // 每次调用的角度步长（控制正弦频率）
-#define M_PI 3.14159265358979323846   /* pi */
+#define M_PI 3.14159265358979323846   /* pi */                 
 
 int main(void)
 {
     LOG_INF("[app] start");
     const struct device *motor_fl = DEVICE_DT_GET(CHASSIS_FL_NODE);
     const struct device *motor_fr = DEVICE_DT_GET(CHASSIS_FR_NODE);
+    const struct device *arm_joint1 = DEVICE_DT_GET(ARM_JOINT1_NODE);
 #ifdef CONFIG_CAN_RX_MANAGER
     const struct device *rx_mgr   = DEVICE_DT_GET(RX_MANAGER_NODE);
 #endif
@@ -46,13 +49,20 @@ int main(void)
         LOG_ERR("motor FR not found");
         return -ENODEV;
     }
-
+    if (!arm_joint1) {
+        LOG_ERR("arm_joint1 not found");
+        return -ENODEV;
+    }
     if (!device_is_ready(motor_fl)) {
         LOG_ERR("motor FL not ready: %s", motor_fl->name);
         return -ENODEV;
     }
     if (!device_is_ready(motor_fr)) {
         LOG_ERR("motor FR not ready: %s", motor_fr->name);
+        return -ENODEV;
+    }
+    if (!device_is_ready(arm_joint1)) {
+        LOG_ERR("arm_joint1 not ready: %s", arm_joint1->name);
         return -ENODEV;
     }
 #ifdef CONFIG_CAN_RX_MANAGER
@@ -75,6 +85,10 @@ int main(void)
     {
         current_max = MOTOR_2006_CURRENT_MAX;
     }
+    else if(strcmp(motor_type, "MG") == 0)
+    {
+        current_max = MOTOR_MG_CURRENT_MAX;
+    }
     else
     {
         LOG_WRN("Unknown motor type '%s', using default current max", motor_type);
@@ -84,6 +98,7 @@ int main(void)
 
     register_motor(motor_fl);
     register_motor(motor_fr);
+    register_motor(arm_joint1);
 
     while (true) {
         float sin_val = sin(angle_rad);
@@ -92,27 +107,30 @@ int main(void)
 
         // 更新角度（循环0~2π，实现正弦波循环）
         angle_rad += ANGLE_STEP;
-        if (angle_rad >= 2 * M_PI)
+        if ((double)angle_rad >= 2 * M_PI)
         {
             angle_rad = 0.0f;
         }
 
         const smotor_receive_data_t *fl = get_motor_rxdata(motor_fl);
         const smotor_receive_data_t *fr = get_motor_rxdata(motor_fr);
+        const smotor_receive_data_t *arm = get_motor_rxdata(arm_joint1);
 
         // 接收函数检查
-        LOG_INF("FL angle=%d speed=%d current=%d alive=%d temp=%d",
-                    (int)fl->angle, (int)fl->speed, (int)fl->current,
+        LOG_WRN_RATELIMIT_RATE(1000,"FL encoder=%d speed=%d iq=%d alive=%d temp=%d",
+                    fl->encoder, (int)fl->speed, (int)fl->iq,
                     get_motor_heartbeat_status(motor_fl) ? 1 : 0, (int)fl->specific_data.m3508.temp);
-        LOG_INF("FR angle=%d speed=%d current=%d alive=%d temp=%d",
-                (int)fr->angle, (int)fr->speed, (int)fr->current,
+        LOG_WRN_RATELIMIT_RATE(1000,"FR encoder=%d speed=%d iq=%d alive=%d temp=%d",
+                fr->encoder, (int)fr->speed, (int)fr->iq,
                 get_motor_heartbeat_status(motor_fr) ? 1 : 0, (int)fr->specific_data.m3508.temp);
+        LOG_WRN_RATELIMIT_RATE(1000,"ARM encoder=%d speed=%d iq=%d alive=%d temp=%d",
+                arm->encoder, (int)arm->speed, (int)arm->iq,
+                get_motor_heartbeat_status(arm_joint1) ? 1 : 0, (int)arm->specific_data.lk.temp);
 
         // 发送函数检查
-        motor_update_serialized(motor_fl, current);
-        motor_update_serialized(motor_fr, current);
-        // can_tx_manager_send(can_tx_mgr, K_FOREVER, NULL,
-        //                     0x200, NULL);
+        motor_torque_control(motor_fl, current);
+        motor_torque_control(motor_fr, current);
+        motor_torque_control(arm_joint1, current);
         k_sleep(K_MSEC(100));
     }
 
