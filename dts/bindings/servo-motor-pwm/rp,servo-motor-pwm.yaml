@@ -1,0 +1,42 @@
+# Copyright (c) 2026 RobotPilots-SZU
+# SPDX-License-Identifier: Apache-2.0
+
+description: PWM-driven servo motor.
+
+include: base.yaml
+
+compatible: "rp,servo-motor-pwm"
+
+properties:
+  pwms:
+    required: true
+    type: phandle-array
+    description: |
+      PWM specifier driving the servo motor. Expected cells:
+        - channel: PWM channel number
+        - period: PWM period in nanoseconds
+        - flags: PWM flags
+
+  min-pulse:
+    required: true
+    type: int
+    description: |
+      Minimum pulse width in nanoseconds.
+
+  max-pulse:
+    required: true
+    type: int
+    description: |
+      Maximum pulse width in nanoseconds.
+
+  max-angle:
+    required: true   
+    type: int
+    description: |
+      Maximum angle in degrees.
+
+  min-angle:
+    required: false
+    type: int
+    description: |
+      Minimum angle (degrees). Optional, if not provided, the driver will assume 0 degrees.

@@ -12,7 +12,7 @@ endif()
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 # define cmake project
-project(watchdog)
+project(vofa_plus)
 
 target_sources(app PRIVATE
     ./src/main.cpp
