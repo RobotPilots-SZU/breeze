@@ -538,6 +538,13 @@ static inline int motor_lk_setencoderself(motor_lk_data_t *data, const struct ca
 
 
 /*---------------------------------------------------------lk motor single mode control api----------------------------------------------------------------------*/
+static void motor_dm_one_shot_cb(const struct device *dev, int error, void *user_data)
+{
+    ARG_UNUSED(dev);
+    ARG_UNUSED(error);
+    ARG_UNUSED(user_data);
+}
+
 /**
  * @brief 写入电机控制参数进入RAM，注意！掉电丢失！
  *
@@ -549,165 +556,198 @@ static inline int motor_lk_setencoderself(motor_lk_data_t *data, const struct ca
  */
 static inline int motor_lk_writeparam_anglepid(const struct device *dev, int16_t angleKp, int16_t angleKi, int16_t angleKd)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] anglepid Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = ANGLE_PID_PARAM;
-    data->motor_data.tx_data[2] = (uint8_t)(angleKp & 0xFF);
-    data->motor_data.tx_data[3] = (uint8_t)((angleKp >> 8) & 0xFF);
-    data->motor_data.tx_data[4] = (uint8_t)(angleKi & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((angleKi >> 8) & 0xFF);
-    data->motor_data.tx_data[6] = (uint8_t)(angleKd & 0xFF);
-    data->motor_data.tx_data[7] = (uint8_t)((angleKd >> 8) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = ANGLE_PID_PARAM;
+    item.data[2] = (uint8_t)(angleKp & 0xFF);
+    item.data[3] = (uint8_t)((angleKp >> 8) & 0xFF);
+    item.data[4] = (uint8_t)(angleKi & 0xFF);
+    item.data[5] = (uint8_t)((angleKi >> 8) & 0xFF);
+    item.data[6] = (uint8_t)(angleKd & 0xFF);
+    item.data[7] = (uint8_t)((angleKd >> 8) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write angle pid param command: %d", ret);
+    }
     return 0;
 }
 
 static inline int motor_lk_writeparam_speedpid(const struct device *dev, int16_t speedKp, int16_t speedKi, int16_t speedKd)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] speedpid Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = SPEED_PID_PARAM;
-    data->motor_data.tx_data[2] = (uint8_t)(speedKp & 0xFF);
-    data->motor_data.tx_data[3] = (uint8_t)((speedKp >> 8) & 0xFF);
-    data->motor_data.tx_data[4] = (uint8_t)(speedKi & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((speedKi >> 8) & 0xFF);
-    data->motor_data.tx_data[6] = (uint8_t)(speedKd & 0xFF);
-    data->motor_data.tx_data[7] = (uint8_t)((speedKd >> 8) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = SPEED_PID_PARAM;
+    item.data[2] = (uint8_t)(speedKp & 0xFF);
+    item.data[3] = (uint8_t)((speedKp >> 8) & 0xFF);
+    item.data[4] = (uint8_t)(speedKi & 0xFF);
+    item.data[5] = (uint8_t)((speedKi >> 8) & 0xFF);
+    item.data[6] = (uint8_t)(speedKd & 0xFF);
+    item.data[7] = (uint8_t)((speedKd >> 8) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write speed pid param command: %d", ret);
+    }
     return 0;
 }
 
 static inline int motor_lk_writeparam_currentpid(const struct device *dev, int16_t currentKp, int16_t currentKi, int16_t currentKd)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] currentpid Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = CURRENT_PID_PARAM;
-    data->motor_data.tx_data[2] = (uint8_t)(currentKp & 0xFF);
-    data->motor_data.tx_data[3] = (uint8_t)((currentKp >> 8) & 0xFF);
-    data->motor_data.tx_data[4] = (uint8_t)(currentKi & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((currentKi >> 8) & 0xFF);
-    data->motor_data.tx_data[6] = (uint8_t)(currentKd & 0xFF);
-    data->motor_data.tx_data[7] = (uint8_t)((currentKd >> 8) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = CURRENT_PID_PARAM;
+    item.data[2] = (uint8_t)(currentKp & 0xFF);
+    item.data[3] = (uint8_t)((currentKp >> 8) & 0xFF);
+    item.data[4] = (uint8_t)(currentKi & 0xFF);
+    item.data[5] = (uint8_t)((currentKi >> 8) & 0xFF);
+    item.data[6] = (uint8_t)(currentKd & 0xFF);
+    item.data[7] = (uint8_t)((currentKd >> 8) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write current pid param command: %d", ret);
+    }
     return 0;
 }
 
 static inline int motor_lk_writeparam_torquelimit(const struct device *dev, int16_t torqueLimit)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] torquelimit Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = TORQUE_LIMIT_PARAM;
-    data->motor_data.tx_data[4] = (uint8_t)(torqueLimit & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((torqueLimit >> 8) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = TORQUE_LIMIT_PARAM;
+    item.data[4] = (uint8_t)(torqueLimit & 0xFF);
+    item.data[5] = (uint8_t)((torqueLimit >> 8) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write torque limit param command: %d", ret);
+    }
     return 0;
 }
 
 static inline int motor_lk_writeparam_speedlimit(const struct device *dev, int32_t speedLimit)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] speedlimit Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = SPEED_LIMIT_PARAM;
-    data->motor_data.tx_data[4] = (uint8_t)(speedLimit & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((speedLimit >> 8) & 0xFF);
-    data->motor_data.tx_data[6] = (uint8_t)((speedLimit >> 16) & 0xFF);
-    data->motor_data.tx_data[7] = (uint8_t)((speedLimit >> 24) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = SPEED_LIMIT_PARAM;
+    item.data[4] = (uint8_t)(speedLimit & 0xFF);
+    item.data[5] = (uint8_t)((speedLimit >> 8) & 0xFF);
+    item.data[6] = (uint8_t)((speedLimit >> 16) & 0xFF);
+    item.data[7] = (uint8_t)((speedLimit >> 24) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write speed limit param command: %d", ret);
+    }
     return 0;
 }
 
 static inline int motor_lk_writeparam_anglelimit(const struct device *dev, int32_t angleLimit)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] anglelimit Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = ANGLE_LIMIT_PARAM;
-    data->motor_data.tx_data[4] = (uint8_t)(angleLimit & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((angleLimit >> 8) & 0xFF);
-    data->motor_data.tx_data[6] = (uint8_t)((angleLimit >> 16) & 0xFF);
-    data->motor_data.tx_data[7] = (uint8_t)((angleLimit >> 24) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = ANGLE_LIMIT_PARAM;
+    item.data[4] = (uint8_t)(angleLimit & 0xFF);
+    item.data[5] = (uint8_t)((angleLimit >> 8) & 0xFF);
+    item.data[6] = (uint8_t)((angleLimit >> 16) & 0xFF);
+    item.data[7] = (uint8_t)((angleLimit >> 24) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write angle limit param command: %d", ret);
+    }
     return 0;
 }
 
 static inline int motor_lk_writeparam_currentramp(const struct device *dev, int32_t currentRamp)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] currentramp Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = CURRENT_RAMP_PARAM;
-    data->motor_data.tx_data[4] = (uint8_t)(currentRamp & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((currentRamp >> 8) & 0xFF);
-    data->motor_data.tx_data[6] = (uint8_t)((currentRamp >> 16) & 0xFF);
-    data->motor_data.tx_data[7] = (uint8_t)((currentRamp >> 24) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = CURRENT_RAMP_PARAM;
+    item.data[4] = (uint8_t)(currentRamp & 0xFF);
+    item.data[5] = (uint8_t)((currentRamp >> 8) & 0xFF);
+    item.data[6] = (uint8_t)((currentRamp >> 16) & 0xFF);
+    item.data[7] = (uint8_t)((currentRamp >> 24) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write current ramp param command: %d", ret);
+    }
     return 0;
 }
 
 static inline int motor_lk_writeparam_speedramp(const struct device *dev,int32_t speedRamp)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] speedramp Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = WRITE_CONTROL_PARAM;
-    data->motor_data.tx_data[1] = SPEED_RAMP_PARAM;
-    data->motor_data.tx_data[4] = (uint8_t)(speedRamp & 0xFF);
-    data->motor_data.tx_data[5] = (uint8_t)((speedRamp >> 8) & 0xFF);
-    data->motor_data.tx_data[6] = (uint8_t)((speedRamp >> 16) & 0xFF);
-    data->motor_data.tx_data[7] = (uint8_t)((speedRamp >> 24) & 0xFF);
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = WRITE_CONTROL_PARAM;
+    item.data[1] = SPEED_RAMP_PARAM;
+    item.data[4] = (uint8_t)(speedRamp & 0xFF);
+    item.data[5] = (uint8_t)((speedRamp >> 8) & 0xFF);
+    item.data[6] = (uint8_t)((speedRamp >> 16) & 0xFF);
+    item.data[7] = (uint8_t)((speedRamp >> 24) & 0xFF);
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to write speed ramp param command: %d", ret);
+    }
     return 0;
 }
 
@@ -719,16 +759,27 @@ static inline int motor_lk_writeparam_speedramp(const struct device *dev,int32_t
  */
 static inline int motor_lk_clearerror(const struct device *dev)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] clearerror Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = CLEAR_MOTOR_ERROR;
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = CLEAR_MOTOR_ERROR;
+    item.data[1] = 0x00;
+    item.data[2] = 0x00;
+    item.data[3] = 0x00;
+    item.data[4] = 0x00;
+    item.data[5] = 0x00;
+    item.data[6] = 0x00;
+    item.data[7] = 0x00;
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to clear motor error: %d", ret);
+    }
     return 0;
 }
 
@@ -740,16 +791,27 @@ static inline int motor_lk_clearerror(const struct device *dev)
  */
 static inline int motor_lk_disable(const struct device *dev)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] disable Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = DISABLE_MOTOR;
-    k_spin_unlock(&data->lock, key);
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = DISABLE_MOTOR;
+    item.data[1] = 0x00;
+    item.data[2] = 0x00;
+    item.data[3] = 0x00;
+    item.data[4] = 0x00;
+    item.data[5] = 0x00;
+    item.data[6] = 0x00;
+    item.data[7] = 0x00;
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to disable motor: %d", ret);
+    }
     return 0;
 }
 
@@ -761,17 +823,27 @@ static inline int motor_lk_disable(const struct device *dev)
  */
 static inline int motor_lk_enable(const struct device *dev)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] enable Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = ENABLE_MOTOR;
-    k_spin_unlock(&data->lock, key);
-    return 0;
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = ENABLE_MOTOR;
+    item.data[1] = 0x00;
+    item.data[2] = 0x00;
+    item.data[3] = 0x00;
+    item.data[4] = 0x00;
+    item.data[5] = 0x00;
+    item.data[6] = 0x00;
+    item.data[7] = 0x00;
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to enable motor: %d", ret);
+    }     return 0;
 }
 
 /**
@@ -782,17 +854,27 @@ static inline int motor_lk_enable(const struct device *dev)
  */
 static inline int motor_lk_stop(const struct device *dev)
 {
-    motor_lk_data_t *data = (motor_lk_data_t *)dev->data;
-    k_spinlock_key_t key;
-    if(data == NULL) {
+    motor_lk_cfg_t *cfg = (motor_lk_cfg_t *)dev->config;
+    if(cfg == NULL) {
         LOG_ERR("[lk_motor_err] stop Invalid arguments");
         return -EINVAL;
     }
-    key = k_spin_lock(&data->lock);
-    memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
-    data->motor_data.tx_data[0] = STOP_MOTOR;
-    k_spin_unlock(&data->lock, key);
-    return 0;
+    struct can_frame item = {0};
+    item.flags = 0;
+    item.dlc = 8;
+    item.id = cfg->tx_id;
+    item.data[0] = STOP_MOTOR;
+    item.data[1] = 0x00;
+    item.data[2] = 0x00;
+    item.data[3] = 0x00;
+    item.data[4] = 0x00;
+    item.data[5] = 0x00;
+    item.data[6] = 0x00;
+    item.data[7] = 0x00;
+    int ret = can_send(cfg->can_dev, &item, K_NO_WAIT, motor_dm_one_shot_cb, NULL);
+    if (ret < 0) {
+        LOG_ERR("[lk_motor_err] Failed to stop motor: %d", ret);
+    }     return 0;
 }
 
 /**
@@ -825,8 +907,13 @@ static inline int motor_lk_single_openloopcontrol(const struct device *dev, int1
     key = k_spin_lock(&data->lock);
     memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
     data->motor_data.tx_data[0] = OPEN_LOOP_CONTROL;
+    data->motor_data.tx_data[1] = 0x00;
+    data->motor_data.tx_data[2] = 0x00;
+    data->motor_data.tx_data[3] = 0x00;
     data->motor_data.tx_data[4] = (uint8_t)(pw & 0xFF);
     data->motor_data.tx_data[5] = (uint8_t)((pw >> 8) & 0xFF);
+    data->motor_data.tx_data[6] = 0x00;
+    data->motor_data.tx_data[7] = 0x00;
     k_spin_unlock(&data->lock, key);
     return 0;
 }
@@ -861,8 +948,13 @@ static inline int motor_lk_single_closedloopcontrol(const struct device *dev, in
     key = k_spin_lock(&data->lock);
     memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
     data->motor_data.tx_data[0] = CLOSED_LOOP_CONTROL;
+    data->motor_data.tx_data[1] = 0x00;
+    data->motor_data.tx_data[2] = 0x00;
+    data->motor_data.tx_data[3] = 0x00;
     data->motor_data.tx_data[4] = (uint8_t)(iq & 0xFF);
     data->motor_data.tx_data[5] = (uint8_t)((iq >> 8) & 0xFF);
+    data->motor_data.tx_data[6] = 0x00;
+    data->motor_data.tx_data[7] = 0x00;
     k_spin_unlock(&data->lock, key);
     return 0;
 }
@@ -939,6 +1031,9 @@ static inline int motor_lk_single_mulposcontrol1(const struct device *dev, doubl
     key = k_spin_lock(&data->lock);
     memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
     data->motor_data.tx_data[0] = MULTI_POSITION_CONTROL1;
+    data->motor_data.tx_data[1] = 0x00;
+    data->motor_data.tx_data[2] = 0x00;
+    data->motor_data.tx_data[3] = 0x00;
     data->motor_data.tx_data[4] = (uint8_t)(angleControl & 0xFF);
     data->motor_data.tx_data[5] = (uint8_t)((angleControl >> 8) & 0xFF);
     data->motor_data.tx_data[6] = (uint8_t)((angleControl >> 16) & 0xFF);
@@ -1008,6 +1103,8 @@ static inline int motor_lk_single_sigposcontrol1(const struct device *dev, bool 
     memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
     data->motor_data.tx_data[0] = SINGLE_POSITION_CONTROL1;
     data->motor_data.tx_data[1] = spindir ? 1 : 0;                           // 0表示顺时针旋转，1表示逆时针旋转
+    data->motor_data.tx_data[2] = 0x00;
+    data->motor_data.tx_data[3] = 0x00;
     data->motor_data.tx_data[4] = (uint8_t)(angleControl & 0xFF);
     data->motor_data.tx_data[5] = (uint8_t)((angleControl >> 8) & 0xFF);
     data->motor_data.tx_data[6] = (uint8_t)((angleControl >> 16) & 0xFF);
@@ -1075,6 +1172,9 @@ static inline int motor_lk_single_increposcontrol1(const struct device *dev, dou
     key = k_spin_lock(&data->lock);
     memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
     data->motor_data.tx_data[0] = INCRE_POSITION_CONTROL1;
+    data->motor_data.tx_data[1] = 0x00;
+    data->motor_data.tx_data[2] = 0x00;
+    data->motor_data.tx_data[3] = 0x00;
     data->motor_data.tx_data[4] = (uint8_t)(angleIncre & 0xFF);
     data->motor_data.tx_data[5] = (uint8_t)((angleIncre >> 8) & 0xFF);
     data->motor_data.tx_data[6] = (uint8_t)((angleIncre >> 16) & 0xFF);
@@ -1107,6 +1207,7 @@ static inline int motor_lk_single_increposcontrol2(const struct device *dev,doub
     key = k_spin_lock(&data->lock);
     memset(data->motor_data.tx_data, 0, 8); // 先清零，避免之前的控制命令对这次控制造成影响
     data->motor_data.tx_data[0] = INCRE_POSITION_CONTROL2;
+    data->motor_data.tx_data[1] = 0x00;
     data->motor_data.tx_data[2] = (uint8_t)(maxSpeed & 0xFF);
     data->motor_data.tx_data[3] = (uint8_t)((maxSpeed >> 8) & 0xFF);
     data->motor_data.tx_data[4] = (uint8_t)(angleIncre & 0xFF);
