@@ -257,13 +257,43 @@
     stop-bits = "1";
 };
 
+&uart7 {
+    status = "okay";
+    clocks = <&rcc STM32_CLOCK(APB1, 30)>,
+             <&rcc STM32_SRC_PLL2_Q USART2345678_SEL(1)>;
+    pinctrl-0 = <&uart7_rx_pe7 &uart7_tx_pe8>;
+    pinctrl-names = "default";
+    fifo-enable;
+};
+
+&uart8 {
+    status = "okay";
+    clocks = <&rcc STM32_CLOCK(APB1, 31)>,
+             <&rcc STM32_SRC_PLL2_Q USART2345678_SEL(1)>;
+    pinctrl-0 = <&uart8_rx_pe0 &uart8_tx_pe1>;
+    pinctrl-names = "default";
+    fifo-enable;
+};
+
+&uart9 {
+    status = "okay";
+    clocks = <&rcc STM32_CLOCK(APB2, 6)>,
+             <&rcc STM32_SRC_PLL2_Q USART16_SEL(1)>;
+    pinctrl-0 = <&uart9_rx_pd14 &uart9_tx_pd15>;
+    pinctrl-names = "default";
+    fifo-enable;
+};
+
 &usart10 {
     status = "okay";
+    clocks = <&rcc STM32_CLOCK(APB2, 7)>,
+             <&rcc STM32_SRC_PLL2_Q USART16_SEL(1)>;
+    pinctrl-0 = <&usart10_rx_pe2 &usart10_tx_pe3>;
+    pinctrl-names = "default";
     dmas =  <&dmamux1 5 119 STM32_DMA_PERIPH_TX>,    // TX: DMA1 Stream 5, request 119
     <&dmamux1 6 118 STM32_DMA_PERIPH_RX>;    // RX: DMA1 Stream 6, request 118
     dma-names = "tx", "rx";
-    pinctrl-0 = <&usart10_rx_pe2 &usart10_tx_pe3>;
-    pinctrl-names = "default";
+    fifo-enable;
 };
 
 &fdcan1 {
