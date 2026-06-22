@@ -134,7 +134,7 @@
                <&gpioc 3 GPIO_ACTIVE_LOW>;
     dmas =  <&dmamux1 1 40 STM32_DMA_PERIPH_TX>,    // TX: DMA1 Stream 1, request 40
     <&dmamux1 4 39 STM32_DMA_PERIPH_RX>;    // RX: DMA1 Stream 4, request 39
-    dma-names = "spi1-tx", "spi1-rx";
+    dma-names = "tx", "rx";
 
     bmi08x_accel: bmi08x@0 {
         compatible = "bosch,bmi08x-accel";
@@ -217,7 +217,7 @@
     pinctrl-names = "default";
     dmas =  <&dmamux1 10 42 STM32_DMA_PERIPH_TX>,   // TX: DMA2 Stream 2, request 42
     <&dmamux1 9 41 STM32_DMA_PERIPH_RX>;   // RX: DMA2 Stream 1, request 41
-    dma-names = "usart1-tx", "usart1-rx";
+    dma-names = "tx", "rx";
     fifo-enable;
 };
 
