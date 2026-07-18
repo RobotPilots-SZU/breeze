@@ -236,128 +236,128 @@ extern "C"
     static inline const motor_lk_single_data_t *get_single_data(const struct device *dev)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.get_single_data == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->get_single_data == NULL) {
             return NULL;
         }
-        return api->lk_api.get_single_data(dev);
+        return api->lk_api->get_single_data(dev);
     }
 
     static inline int writeparam_anglepid(const struct device *dev, int16_t angleKp, int16_t angleKi, int16_t angleKd)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_anglepid == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_anglepid == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_anglepid(dev, angleKp, angleKi, angleKd);
+        return api->lk_api->writeparam_anglepid(dev, angleKp, angleKi, angleKd);
     }
 
     static inline int writeparam_speedpid(const struct device *dev, int16_t speedKp, int16_t speedKi, int16_t speedKd)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_speedpid == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_speedpid == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_speedpid(dev, speedKp, speedKi, speedKd);
+        return api->lk_api->writeparam_speedpid(dev, speedKp, speedKi, speedKd);
     }
 
     static inline int writeparam_currentpid(const struct device *dev, int16_t currentKp, int16_t currentKi, int16_t currentKd)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_currentpid == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_currentpid == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_currentpid(dev, currentKp, currentKi, currentKd);
+        return api->lk_api->writeparam_currentpid(dev, currentKp, currentKi, currentKd);
     }
 
     static inline int writeparam_torquelimit(const struct device *dev, int16_t torqueLimit)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_torquelimit == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_torquelimit == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_torquelimit(dev, torqueLimit);
+        return api->lk_api->writeparam_torquelimit(dev, torqueLimit);
     }
 
     static inline int writeparam_speedlimit(const struct device *dev, int32_t speedLimit)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_speedlimit == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_speedlimit == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_speedlimit(dev, speedLimit);
+        return api->lk_api->writeparam_speedlimit(dev, speedLimit);
     }
 
     static inline int writeparam_anglelimit(const struct device *dev, int32_t angleLimit)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_anglelimit == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_anglelimit == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_anglelimit(dev, angleLimit);
+        return api->lk_api->writeparam_anglelimit(dev, angleLimit);
     }
 
     static inline int writeparam_currentramp(const struct device *dev, int32_t currentRamp)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_currentramp == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_currentramp == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_currentramp(dev, currentRamp);
+        return api->lk_api->writeparam_currentramp(dev, currentRamp);
     }
 
 
     static inline int writeparam_speedramp(const struct device *dev, int32_t speedRamp)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.writeparam_speedramp == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->writeparam_speedramp == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.writeparam_speedramp(dev, speedRamp);
+        return api->lk_api->writeparam_speedramp(dev, speedRamp);
     }
 
     static inline int single_openloop_control(const struct device *dev, int16_t powerControl)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.single_openloop_control == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->single_openloop_control == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.single_openloop_control(dev, powerControl);
+        return api->lk_api->single_openloop_control(dev, powerControl);
     }
 
     static inline int single_closedloop_control(const struct device *dev, int16_t iqcontrol)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.single_closedloop_control == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->single_closedloop_control == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.single_closedloop_control(dev, iqcontrol);
+        return api->lk_api->single_closedloop_control(dev, iqcontrol);
     }
 
     static inline int single_speedcontrol(const struct device *dev, int32_t speedControl, int16_t iqcontrol)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.single_speedcontrol == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->single_speedcontrol == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.single_speedcontrol(dev, speedControl, iqcontrol);
+        return api->lk_api->single_speedcontrol(dev, speedControl, iqcontrol);
     }
 
     static inline int single_mulposctrl1(const struct device *dev, int32_t angleControl)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.single_mulposctrl1 == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->single_mulposctrl1 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.single_mulposctrl1(dev, angleControl);
+        return api->lk_api->single_mulposctrl1(dev, angleControl);
     }
 
     static inline int single_mulposctrl2(const struct device *dev, int32_t angleControl, uint16_t maxSpeed)
     {
         const struct motor_driver_api_t *api = (const struct motor_driver_api_t *)dev->api;
-        if(!api || api->lk_api.single_mulposctrl2 == NULL) {
+        if(!api || api->lk_api == NULL || api->lk_api->single_mulposctrl2 == NULL) {
             return -ENOSYS;
         }
-        return api->lk_api.single_mulposctrl2(dev, angleControl, maxSpeed);
+        return api->lk_api->single_mulposctrl2(dev, angleControl, maxSpeed);
     }
 
     static inline int single_sigposctrl1(const struct device *dev, int32_t angleControl, uint8_t direction)

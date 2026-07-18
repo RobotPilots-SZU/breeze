@@ -4,8 +4,8 @@
  * author: Sassinak
  */
 
-#ifndef CAN_TX_MANAGER_H_
-#define CAN_TX_MANAGER_H_
+#ifndef BREEZE_DRIVER_CAN_TX_MANAGER_H_
+#define BREEZE_DRIVER_CAN_TX_MANAGER_H_
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/can.h>
@@ -98,4 +98,4 @@ static inline int can_tx_manager_send(const struct device *mgr, k_timeout_t time
 }
 #endif
 
-#endif /* CAN_TX_MANAGER_H_ */
+#endif /* BREEZE_DRIVER_CAN_TX_MANAGER_H_ */

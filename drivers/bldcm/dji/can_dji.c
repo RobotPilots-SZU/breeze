@@ -17,7 +17,7 @@
 
 int motor_dji_update_heartbeat_status(const struct device *dev);
 
-#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_BLDCM_HEARTBEAT_AUTOCHECK)
 static void motor_dji_hb_work_handler(struct k_work *work)
 {
     struct k_work_delayable *dwork = k_work_delayable_from_work(work);           // 获取 k_work_delayable 指针
@@ -25,7 +25,7 @@ static void motor_dji_hb_work_handler(struct k_work *work)
 
     if (data->dev_self != NULL) {
         (void)motor_dji_update_heartbeat_status(data->dev_self);
-        (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS));   // 重新调度下一次心跳检测
+        (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS));   // 重新调度下一次心跳检测
     }
 }
 #endif
@@ -236,7 +236,7 @@ int motor_dji_update_heartbeat_status(const struct device *dev)
     uint64_t elapsed = current_tick - last_tick;
 
     /* 如果超过阈值没有收到心跳，则认为电机掉线：清零接收值并在离线边沿告警一次 */
-    if (elapsed > (uint64_t)CONFIG_MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS) {
+    if (elapsed > (uint64_t)CONFIG_BLDCM_HEARTBEAT_OFFLINE_TIMEOUT_MS) {
         data->motor_data.heartbeat_status.is_alive = false;
 
         /* 只有从在线->离线时，才清零并告警；避免每次轮询刷屏 */
@@ -460,10 +460,10 @@ static int motor_dji_can_init(const struct device *dev)
     data->motor_data.heartbeat_status.is_alive = false;
     data->motor_data.heartbeat_status.heartbeat_tick = 0;
 
-#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_BLDCM_HEARTBEAT_AUTOCHECK)
     data->dev_self = dev;
     k_work_init_delayable(&data->hb_work, motor_dji_hb_work_handler);
-    (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS));
+    (void)k_work_schedule(&data->hb_work, K_MSEC(CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS));
 #endif
 
     return 0;
@@ -502,7 +502,7 @@ static int motor_dji_can_init(const struct device *dev)
         .Tx_feq = (uint16_t)DT_INST_PROP(inst, tx_feq), \
     };  \
     DEVICE_DT_INST_DEFINE(inst, motor_dji_can_init, NULL, &motor_dji_data_##inst, \
-                      &motor_dji_cfg_##inst, POST_KERNEL, CONFIG_MOTOR_INIT_PRIORITY, \
+                      &motor_dji_cfg_##inst, POST_KERNEL, CONFIG_BLDCM_INIT_PRIORITY, \
                   &motor_dji_can_api);
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)

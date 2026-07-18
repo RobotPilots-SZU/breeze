@@ -1,11 +1,11 @@
-menuconfig MOTOR
-    bool "Motor drivers"
+menuconfig BLDCM
+    bool "Brushless Direct Current Motor drivers"
     default n
     depends on CAN
 
-if MOTOR
+if BLDCM
 
-config MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS
+config BLDCM_HEARTBEAT_OFFLINE_TIMEOUT_MS
         int "motor offline timeout (ms)"
         default 100
         range 1 60000
@@ -13,7 +13,7 @@ config MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS
             If no CAN frames are received for longer than this time, the motor is
             considered offline. Unit: milliseconds.
 
-config MOTOR_HEARTBEAT_AUTOCHECK
+config BLDCM_HEARTBEAT_AUTOCHECK
         bool "motor heartbeat auto-check (workqueue)"
         default n
         help
@@ -21,15 +21,15 @@ config MOTOR_HEARTBEAT_AUTOCHECK
             work item (shared system workqueue). This avoids creating one thread per
             motor device.
 
-config MOTOR_HEARTBEAT_POLL_PERIOD_MS
+config BLDCM_HEARTBEAT_POLL_PERIOD_MS
         int "motor heartbeat poll period (ms)"
         default 10
         range 1 1000
-        depends on MOTOR_HEARTBEAT_AUTOCHECK
+        depends on BLDCM_HEARTBEAT_AUTOCHECK
         help
             Poll period for heartbeat auto-check. Unit: milliseconds.
 
-config MOTOR_INIT_PRIORITY
+config BLDCM_INIT_PRIORITY
         int "Init priority"
         default 93
         range 0 99
@@ -37,11 +37,11 @@ config MOTOR_INIT_PRIORITY
             Device init priority for motor drivers.
             Must be greater (later) than the CAN controller init priority.
 
-config MOTOR_LOG_LEVEL
-    int "Motor log level"
+config BLDCM_LOG_LEVEL
+    int "BLDCM log level"
     default 3
     range 0 4
     help
       Log level for motor drivers (0=none, 4=debug).
 
-endif # MOTOR
+endif # BLDCM

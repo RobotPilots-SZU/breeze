@@ -7,7 +7,7 @@
 #ifndef DJI_PROTOCOL_H
 #define DJI_PROTOCOL_H
 
-#include <drivers/motor.h>
+#include <drivers/bldcm/bldcm.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
@@ -21,17 +21,17 @@
 #include <drivers/can_tx_manager.h>
 #endif
 
-#define LOG_LEVEL CONFIG_MOTOR_LOG_LEVEL
+#define LOG_LEVEL CONFIG_BLDCM_LOG_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(motor_dji_can);
 
 
 /* Fallbacks for static analysis (Zephyr builds define these via autoconf.h) */
-#ifndef CONFIG_MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS
-#define CONFIG_MOTOR_HEARTBEAT_OFFLINE_TIMEOUT_MS 100
+#ifndef CONFIG_BLDCM_HEARTBEAT_OFFLINE_TIMEOUT_MS
+#define CONFIG_BLDCM_HEARTBEAT_OFFLINE_TIMEOUT_MS 100
 #endif
-#ifndef CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS
-#define CONFIG_MOTOR_HEARTBEAT_POLL_PERIOD_MS 10
+#ifndef CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS
+#define CONFIG_BLDCM_HEARTBEAT_POLL_PERIOD_MS 10
 #endif
 
 /*
@@ -65,7 +65,7 @@ typedef struct motor_dji_data_t
     int rxmanager_slot_id;                  // CAN RX管理器 槽位ID
 #endif
 
-#if defined(CONFIG_MOTOR_HEARTBEAT_AUTOCHECK)
+#if defined(CONFIG_BLDCM_HEARTBEAT_AUTOCHECK)
     const struct device *dev_self;          // 指向自身设备的指针，用于心跳自动检测
     struct k_work_delayable hb_work;        // 心跳自动检测的延时工作
 #endif
