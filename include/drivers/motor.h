@@ -1,3 +1,4 @@
+#pragma once
 #include <zephyr/device.h>
 #include <math.h>
 #include <errno.h>
