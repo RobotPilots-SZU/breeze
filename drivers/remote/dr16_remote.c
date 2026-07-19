@@ -156,7 +156,7 @@ static void rc_sensor_check(rc_sensor_t* sensor) {
   }
 
   if ((info->thumbwheel.value == 0) && (thumbwheel_record != 0)) {
-    for (char i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
       if (info->tw_step_value[i] > 0 && thumbwheel_record > 0) {
         if (thumbwheel_record >= info->tw_step_value[i]) {
           info->thumbwheel.step[i] = !info->thumbwheel.step[i];
@@ -504,26 +504,25 @@ static bool rc_is_death_zone(int16_t value, int16_t center, int16_t threshold) {
   return !(value > center + threshold || value < center - threshold);
 }
 
-static bool rc_is_channel_reset(rc_sensor_info_t* info) {
+static __unused bool rc_is_channel_reset(rc_sensor_info_t* info) {
   return ((!rc_is_death_zone(info->ch0, 0, 50)) &&
           (!rc_is_death_zone(info->ch1, 0, 50)) &&
           (!rc_is_death_zone(info->ch2, 0, 50)) &&
           (!rc_is_death_zone(info->ch3, 0, 50)));
 }
 
-#define DR16_REMOTE_INIT(inst)                                     \
-  static struct rc_sensor_data remote_sensor_##inst##_data;        \
-  static const struct rc_sensor_cfg remote_sensor_##inst##_cfg = { \
-      .uart = DEVICE_DT_GET(DT_INST_PHANDLE(inst, uart)),          \
-      .tw_up_step = -DEFAULT_TW_OFFSET,                            \
-      .tw_down_step = DEFAULT_TW_OFFSET,                           \
-      .tw_mouseup_step = -DEFAULT_TW_MOUSE_OFFSET,                 \
-      .tw_mousedown_step = DEFAULT_TW_MOUSE_OFFSET,                \
-      .offline_max_cnt = DEFAULT_OFFLINE_CNT,                      \
-  };                                                               \
-  DEVICE_DT_INST_DEFINE(inst, rc_sensor_init, NULL,                \
-                        &remote_sensor_##inst##_data,              \
-                        &remote_sensor_##inst##_cfg, POST_KERNEL,  \
-                        CONFIG_REMOTE_INIT_PRIORITY, &remote_sensor_api)
+#define DR16_REMOTE_INIT(inst)                                                                     \
+	static __nocache struct rc_sensor_data remote_sensor_##inst##_data;                         \
+	static const struct rc_sensor_cfg remote_sensor_##inst##_cfg = {                           \
+		.uart = DEVICE_DT_GET(DT_INST_PHANDLE(inst, uart)),                                \
+		.tw_up_step = -DEFAULT_TW_OFFSET,                                                  \
+		.tw_down_step = DEFAULT_TW_OFFSET,                                                 \
+		.tw_mouseup_step = -DEFAULT_TW_MOUSE_OFFSET,                                       \
+		.tw_mousedown_step = DEFAULT_TW_MOUSE_OFFSET,                                      \
+		.offline_max_cnt = DEFAULT_OFFLINE_CNT,                                            \
+	};                                                                                         \
+	DEVICE_DT_INST_DEFINE(inst, rc_sensor_init, NULL, &remote_sensor_##inst##_data,            \
+			      &remote_sensor_##inst##_cfg, POST_KERNEL,                            \
+			      CONFIG_REMOTE_INIT_PRIORITY, &remote_sensor_api)
 
 DT_INST_FOREACH_STATUS_OKAY(DR16_REMOTE_INIT);

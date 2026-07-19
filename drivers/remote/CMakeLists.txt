@@ -2,4 +2,4 @@
 
 zephyr_library()
 
-zephyr_library_sources_ifdef(DR16_REMOTE, dr16_remote.c)
+zephyr_library_sources_ifdef(CONFIG_REMOTE dr16_remote.c)
