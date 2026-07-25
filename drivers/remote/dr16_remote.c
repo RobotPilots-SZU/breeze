@@ -156,7 +156,7 @@ static void rc_sensor_check(rc_sensor_t* sensor) {
   }
 
   if ((info->thumbwheel.value == 0) && (thumbwheel_record != 0)) {
-    for (char i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
       if (info->tw_step_value[i] > 0 && thumbwheel_record > 0) {
         if (thumbwheel_record >= info->tw_step_value[i]) {
           info->thumbwheel.step[i] = !info->thumbwheel.step[i];
@@ -504,10 +504,11 @@ static bool rc_is_death_zone(int16_t value, int16_t center, int16_t threshold) {
   return !(value > center + threshold || value < center - threshold);
 }
 
-static bool rc_is_channel_reset(rc_sensor_info_t* info) {
-  return ((!rc_is_death_zone(info->ch0, 0, 50)) &&
+static bool __attribute__((unused)) rc_is_channel_reset(rc_sensor_info_t *info)
+{
+	return ((!rc_is_death_zone(info->ch0, 0, 50)) &&
           (!rc_is_death_zone(info->ch1, 0, 50)) &&
-          (!rc_is_death_zone(info->ch2, 0, 50)) &&
+		      (!rc_is_death_zone(info->ch2, 0, 50)) &&
           (!rc_is_death_zone(info->ch3, 0, 50)));
 }
 
