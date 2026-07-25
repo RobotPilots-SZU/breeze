@@ -10,7 +10,6 @@ list(APPEND DTC_BINDINGS_DIRS
 
 target_sources(app PRIVATE
     src/main.c
-    ${self_driver_DIR}/remote/dr16_remote.c
 )
 target_include_directories(app PRIVATE include)
 
