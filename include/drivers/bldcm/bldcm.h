@@ -19,6 +19,13 @@ extern "C"
         bool is_alive;           // 心跳状态
     } smotor_heartbeat_status_t;
 
+    typedef struct rw_reg_t
+    {
+        uint16_t reg_addr;      // 寄存器地址
+        uint16_t CANID;         // 设备的can ID
+        uint8_t data[4];        // 寄存器数据
+    } rw_reg_t;
+
     /* M2006特有的数据结构，暂时是空*/
     // typedef struct smotor_m2006_rxdata_t
     // {
@@ -51,6 +58,16 @@ extern "C"
         uint8_t holdBrakeState;     // 抱闸器状态：0x00-抱闸器启动, 0x01-抱闸器释放
     } smotor_lk_rxdata_t;
 
+    typedef struct smotor_dm_rxdata_t
+    {
+        uint8_t errState;           // 错误状态：0x00-失能, 0x01-使能, 0x08-超压, 0x09-欠压, 0x0A-过流, 0x0B-MOS过温, 0x0C-电机过温, 0x0D-通信异常, 0x0E-过载
+        uint8_t mos_temp;           // MOS温度
+        uint8_t motor_temp;         // 电机温度
+        float vel_real;             // 实际速度，单位rad/s。
+        float pos_real;             // 实际位置，单位rad。
+        float iq_real;              // 实际扭矩，单位nm。
+    } smotor_dm_rxdata_t;
+
     typedef struct smotor_receive_data_t
     {
         int16_t speed;              // 速度值
@@ -61,6 +78,7 @@ extern "C"
             smotor_m3508_rxdata_t m3508;
             smotor_m6020_rxdata_t m6020;
             smotor_lk_rxdata_t lk;
+            smotor_dm_rxdata_t dm;
             // smotor_m2006_rxdata_t m2006;
         } specific_data;         // 不同电机类型的特有数据
     } smotor_receive_data_t;
@@ -73,6 +91,7 @@ extern "C"
         MOTOR_DJI_3508          = 1u << 3,
         MOTOR_DJI_6020          = 1u << 4,
         MOTOR_LK                = 1u << 5,
+        MOTOR_DM                = 1u << 6,
     } motor_rx_valid_t;
 
     /**
@@ -131,6 +150,7 @@ extern "C"
     typedef int (*motor_api_stop)(const struct device *dev);
 
     typedef struct lk_special_api lk_special_api_t;
+    typedef struct dm_special_api dm_special_api_t;
     typedef struct motor_driver_api_t
     {
         motor_api_register register_motor;
@@ -144,6 +164,7 @@ extern "C"
         motor_api_stop stop;
         union{
             const lk_special_api_t *lk_api;
+            const dm_special_api_t *dm_api;
         };
     } motor_driver_api_t;
 

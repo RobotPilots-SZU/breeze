@@ -66,14 +66,34 @@
         can-bus = <&can2>;
         rx-manager = <&can_rx_mgr2>;
         tx-manager = <&can_tx_mgr2>;
-        tx-id = <0x141>;
+        tx-id = <0x280>;
         rx-id = <0x141>;
         motor-type = "MG";
         label = "arm_joint1";
         motor-encoder = <65535>;
         motor-transmission-ratio = <6>;
         Tx-feq = <1000>;
-        control-mode = "single_control";
+        control-mode = "mlu_torque";
+    };
+
+    arm_joint2:motor4{
+        compatible = "rp,dm-can-motor";
+        status = "okay";
+        can-bus = <&can2>;
+        rx-manager = <&can_rx_mgr2>;
+        tx-manager = <&can_tx_mgr2>;
+        tx-id = <0x02>;
+        rx-id = <0x22>;
+        motor-type = "DM80";
+        label = "arm_joint2";
+        control-mode = "MIT";
+        Tx-feq = <1000>;
+        motor-encoder = <65535>;
+        motor-transmission-ratio = <9>;
+        vel-max = <45000>;          // 这里的整数都要除以1000才是实际的上限，必须与上位机的值对应
+        tq-max = <54000>;
+        pos-max = <3141>;
+        mit-params-limit = <500000 0 5000 0>;
     };
 
 };

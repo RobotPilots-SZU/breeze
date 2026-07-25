@@ -1,0 +1,138 @@
+# Copyright (c) 2025 Sassinak
+# SPDX-License-Identifier: Apache-2.0
+
+description:
+  Custom CAN-controlled DM motor device.
+
+
+compatible: "rp,dm-can-motor"
+
+properties:
+  can-bus:
+    type: phandle
+    required: true
+    description: |
+      Reference to the CAN controller used to communicate with the motor.
+      On STM32H7 this is typically one of: &fdcan1, &fdcan2, &fdcan3.
+
+  rx-manager:
+    type: phandle
+    required: false
+    description: |
+      Reference to a shared CAN RX manager (rp,can-rx-manager) bound to the same can-bus.
+      When present, motor drivers should receive frames through the manager instead of
+      creating their own RX threads/message queues.
+
+  tx-manager:
+    type: phandle
+    required: false
+    description: |
+      Reference to a shared CAN TX manager (rp,can-tx-manager) bound to the same can-bus.
+      When present, motor drivers should send frames through the manager instead of
+      sending directly via the CAN controller.
+
+  can-fd:
+    type: boolean
+    description: |
+      Enable CAN FD framing for the motor (up to 64 data bytes).
+      If absent, classic CAN (up to 8 data bytes) is assumed.
+
+  label:
+    type: string
+    description: |
+      Human readable string describing this motor.
+
+  tx-id:
+    type: int
+    required: true
+    description: |
+      CAN identifier used when sending commands to the motor.
+      By default this is interpreted as an 11-bit (standard) ID unless
+      the 'extended-id' property is present.
+
+  rx-id:
+    type: int
+    required: true
+    description: |
+      CAN identifier expected in frames received from the motor.
+
+  motor-type:             # 设计这个字段是因为不同类型的电机，接收的数据格式不一样
+    type: string
+    required: true
+    enum:
+      - "unknown"
+      - "DM43"
+      - "DM60"
+      - "DM80"
+      - "DM100"
+    description: |
+      Type of DM motor.
+
+  motor-encoder:
+    type: int
+    required: true
+    description: |
+      Number of encoder counts per revolution for the motor.
+
+  motor-transmission-ratio:
+    type: int
+    required: true
+    description: |
+      Gearbox transmission ratio (output shaft speed / motor speed).ex: 1:19 -> 19
+
+  Tx-feq:
+    type: int
+    required: true
+    description: |
+      Frequency (in Hz) at which to send commands to the motor. 0 means manaual send only.
+  
+  vel-max:
+    type: int
+    required: true
+    default: 45000
+    description: |
+      Speed limit range of the motor. The first value is the maximum,
+      and the second value is the minimum. This depends on the host
+      configuration and is used to compute the real speed value (rad/s).
+      attention: 45000 is scaled by 1000, which means the real speed limit is 45 rad/s.
+
+  tq-max:
+    type: int
+    required: true
+    default: 18000 
+    description: |
+      Torque limit range of the motor. The first value is the maximum
+      and the second value is the minimum. This depends on the host
+      configuration and is used to compute the real torque value.
+      attention: 18000 is scaled by 1000, which means the real torque limit is 18.
+
+  pos-max:
+    type: int
+    required: true
+    default: 12000       
+    description: |
+      Position limit range of the motor. The first value is the maximum
+      and the second value is the minimum. This depends on the host
+      configuration and is used to compute the real position value.
+      attention: 12000 is scaled by 1000, which means the real position limit is 12.
+
+  mit-params-limit:
+    type: array
+    required: true
+    default: [500000, 0, 5000, 0]
+    description: |
+      Parameter limits for MIT control mode: Kp_max, Kp_min, Kd_max, Kd_min.
+      attention: Kp and Kd are scaled by 1000, which means the real limits are 500 and 5.
+
+  control-mode:
+    type: string
+    required: true
+    enum:
+      - "mul_torque"            # 扭矩控制模式  broadcast mode
+      - "MIT"                   # MIT模式             帧ID就是上位机设定的ID
+      - "pos-vel"               # 位置速度控制模式      帧ID是设定的ID+0x100的偏移
+      - "velocity"              # 速度控制模式          帧ID是设定的ID+0x200的偏移
+    description: |
+      Control mode of the motor.
+
+  
