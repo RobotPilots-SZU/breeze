@@ -139,27 +139,27 @@ static inline int motor_dm_rev_data(struct device *dev, const struct can_frame *
     }
 
     data->motor_data.rx_data.specific_data.dm.errState = (uint8_t)(frame->data[0] >> 4);
-    data->motor_data.rx_data.encoder = (uint16_t)(frame->data[1] | (frame->data[2] << 8));
+    data->motor_data.rx_data.encoder = (uint16_t)((frame->data[1] << 8) | frame->data[2]);
     data->motor_data.rx_data.speed = (int16_t)(frame->data[3] << 4 | frame->data[4] >> 4);
     data->motor_data.rx_data.iq = (int16_t)(((frame->data[4] & 0x0F) << 8) | frame->data[5]);
-    data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_IQ | 
-                                                     MOTOR_RX_VALID_SPEED | 
-                                                     MOTOR_RX_VALID_ENCODER | 
+    data->motor_data.rx_data.valid_mask = (uint32_t)(MOTOR_RX_VALID_IQ |
+                                                     MOTOR_RX_VALID_SPEED |
+                                                     MOTOR_RX_VALID_ENCODER |
                                                      MOTOR_DM);
-    data->motor_data.rx_data.specific_data.dm.vel_real = 
+    data->motor_data.rx_data.specific_data.dm.vel_real =
         uint_to_float(data->motor_data.rx_data.speed, cfg->param_limit.vel_min, cfg->param_limit.vel_max, 12);
-    data->motor_data.rx_data.specific_data.dm.pos_real = 
-        uint_to_float(data->motor_data.rx_data.encoder, 0, cfg->param_limit.pos_max, 16);
-    data->motor_data.rx_data.specific_data.dm.iq_real = 
+    data->motor_data.rx_data.specific_data.dm.pos_real =
+        uint_to_float(data->motor_data.rx_data.encoder, cfg->param_limit.pos_min, cfg->param_limit.pos_max, 16);
+    data->motor_data.rx_data.specific_data.dm.iq_real =
         uint_to_float(data->motor_data.rx_data.iq, cfg->param_limit.tq_min, cfg->param_limit.tq_max, 12);
     return 0;
 }
 
 /**
  * @brief 达妙电机读取寄存器返回数据的解析函数
- * 
- * @param frame 
- * @return rw_reg_t* 
+ *
+ * @param frame
+ * @return rw_reg_t*
  */
 static inline bool motor_dm_readreg_back(rw_reg_t *reg_data, const struct can_frame *frame)
 {
@@ -173,7 +173,7 @@ static inline bool motor_dm_readreg_back(rw_reg_t *reg_data, const struct can_fr
         return false;
     }
     reg_data->CANID = frame->data[0] | (frame->data[1] << 8);
-    
+
     reg_data->reg_addr = frame->data[3];
     reg_data->data[0] = frame->data[4];
     reg_data->data[1] = frame->data[5];
@@ -184,9 +184,9 @@ static inline bool motor_dm_readreg_back(rw_reg_t *reg_data, const struct can_fr
 
 /**
  * @brief 达妙电机写寄存器返回数据的解析函数
- * 
- * @param frame 
- * @return rw_reg_t* 
+ *
+ * @param frame
+ * @return rw_reg_t*
  */
 static inline bool motor_dm_writereg_back(rw_reg_t *reg_data, const struct can_frame *frame)
 {
@@ -200,9 +200,9 @@ static inline bool motor_dm_writereg_back(rw_reg_t *reg_data, const struct can_f
         return false;
     }
     reg_data->CANID = frame->data[0] | (frame->data[1] << 8);
-    
+
     reg_data->reg_addr = frame->data[3];         // 注意这里返回的是寄存器设置的值，不是实际值
-    reg_data->data[0] = frame->data[4];  
+    reg_data->data[0] = frame->data[4];
     reg_data->data[1] = frame->data[5];
     reg_data->data[2] = frame->data[6];
     reg_data->data[3] = frame->data[7];
@@ -211,9 +211,9 @@ static inline bool motor_dm_writereg_back(rw_reg_t *reg_data, const struct can_f
 
 /**
  * @brief 达妙电机存储寄存器返回数据的解析函数
- * 
- * @param frame 
- * @return void 
+ *
+ * @param frame
+ * @return void
  */
 static inline void motor_dm_storereg_back(const struct can_frame *frame)
 {
@@ -243,10 +243,10 @@ static void motor_dm_one_shot_cb(const struct device *dev, int error, void *user
 
 /**
  * @brief 达妙电机读寄存器的数据
- * 
- * @param dev 
+ *
+ * @param dev
  * @param reg_addr 寄存器的地址
- * @return int 
+ * @return int
  */
 static inline int motor_dm_read_register(const struct device *dev, uint8_t reg_addr)
 {
@@ -274,11 +274,11 @@ static inline int motor_dm_read_register(const struct device *dev, uint8_t reg_a
 
 /**
  * @brief 写入寄存器数据
- * 
- * @param dev 
+ *
+ * @param dev
  * @param reg_addr 寄存器地址
  * @param data 要写入的数据
- * @return int 
+ * @return int
  */
 static inline int motor_dm_write_register(const struct device *dev, uint8_t reg_addr, uint32_t data)
 {
@@ -296,7 +296,7 @@ static inline int motor_dm_write_register(const struct device *dev, uint8_t reg_
     item.data[1] = ((cfg->tx_id) >> 8) & 0xFF;    // CANID的高8位
     item.data[2] = DM_CMD_W_REG;                          // 写寄存器命令字
     item.data[3] = reg_addr;                      // 寄存器地址
-    item.data[4] = (data) & 0xFF;           
+    item.data[4] = (data) & 0xFF;
     item.data[5] = (data >> 8) & 0xFF;
     item.data[6] = (data >> 16) & 0xFF;
     item.data[7] = (data >> 24) & 0xFF;
@@ -309,10 +309,10 @@ static inline int motor_dm_write_register(const struct device *dev, uint8_t reg_
 
 /**
  * @brief 存储寄存器数据到达妙电机的非易失性存储中
- * 
- * @param dev 
- * @param reg_addr 
- * @return int 
+ *
+ * @param dev
+ * @param reg_addr
+ * @return int
  */
 static inline int motor_dm_store(const struct device *dev, uint8_t reg_addr)
 {
@@ -340,9 +340,9 @@ static inline int motor_dm_store(const struct device *dev, uint8_t reg_addr)
 
 /**
  * @brief 达妙电机使能函数
- * 
- * @param dev 
- * @return int 
+ *
+ * @param dev
+ * @return int
  */
 static inline int motor_dm_enable(const struct device *dev)
 {
@@ -374,9 +374,9 @@ static inline int motor_dm_enable(const struct device *dev)
 
 /**
  * @brief 达妙电机失能函数
- * 
- * @param dev 
- * @return int 
+ *
+ * @param dev
+ * @return int
  */
 static inline int motor_dm_disable(const struct device *dev)
 {
@@ -408,9 +408,9 @@ static inline int motor_dm_disable(const struct device *dev)
 
 /**
  * @brief 达妙电机保存零点的函数
- * 
- * @param dev 
- * @return int 
+ *
+ * @param dev
+ * @return int
  */
 static inline int motor_dm_save_zero_pos(const struct device *dev)
 {
@@ -442,9 +442,9 @@ static inline int motor_dm_save_zero_pos(const struct device *dev)
 
 /**
  * @brief 达妙电机清楚错误的函数
- * 
- * @param dev 
- * @return int 
+ *
+ * @param dev
+ * @return int
  */
 static inline int motor_dm_clear_error(const struct device *dev)
 {
@@ -477,14 +477,14 @@ static inline int motor_dm_clear_error(const struct device *dev)
 
 /**
  * @brief MIT控制模式。建议看达妙电机的相关文档，理解MIT控制模式的原理和参数含义后再使用这个函数进行控制。
- * 
- * @param dev 
- * @param pos 
- * @param vel 
- * @param Kp 
- * @param Kd 
- * @param Tq 
- * @return int 
+ *
+ * @param dev
+ * @param pos
+ * @param vel
+ * @param Kp
+ * @param Kd
+ * @param Tq
+ * @return int
  */
 static inline int motor_dm_mit_ctrl(const struct device *dev, float pos, float vel, float Kp, float Kd, float Tq)
 {
@@ -499,11 +499,11 @@ static inline int motor_dm_mit_ctrl(const struct device *dev, float pos, float v
     data->motor_data.tx_data[0] = (float_to_uint(pos, cfg->param_limit.pos_min, cfg->param_limit.pos_max, 16) >> 8) & 0xFF;
     data->motor_data.tx_data[1] = float_to_uint(pos, cfg->param_limit.pos_min, cfg->param_limit.pos_max, 16) & 0xFF;
     data->motor_data.tx_data[2] = (float_to_uint(vel, cfg->param_limit.vel_min, cfg->param_limit.vel_max, 12) >> 4) & 0xFF;
-    data->motor_data.tx_data[3] = ((float_to_uint(vel, cfg->param_limit.vel_min, cfg->param_limit.vel_max, 12) & 0x0F) << 4) 
+    data->motor_data.tx_data[3] = ((float_to_uint(vel, cfg->param_limit.vel_min, cfg->param_limit.vel_max, 12) & 0x0F) << 4)
                                 | ((float_to_uint(Kp, cfg->param_limit.kp_min, cfg->param_limit.kp_max, 12) >> 8) & 0x0F);
     data->motor_data.tx_data[4] = float_to_uint(Kp, cfg->param_limit.kp_min, cfg->param_limit.kp_max, 12) & 0xFF;
     data->motor_data.tx_data[5] = (float_to_uint(Kd, cfg->param_limit.kd_min, cfg->param_limit.kd_max, 12) >> 4) & 0xFF;
-    data->motor_data.tx_data[6] = ((float_to_uint(Kd, cfg->param_limit.kd_min, cfg->param_limit.kd_max, 12) & 0x0F) << 4) 
+    data->motor_data.tx_data[6] = ((float_to_uint(Kd, cfg->param_limit.kd_min, cfg->param_limit.kd_max, 12) & 0x0F) << 4)
                                 | ((float_to_uint(Tq, cfg->param_limit.tq_min, cfg->param_limit.tq_max, 12) >> 8) & 0x0F);
     data->motor_data.tx_data[7] = float_to_uint(Tq, cfg->param_limit.tq_min, cfg->param_limit.tq_max, 12) & 0xFF;
     return 0;
@@ -511,11 +511,11 @@ static inline int motor_dm_mit_ctrl(const struct device *dev, float pos, float v
 
 /**
  * @brief 达妙电机位置速度控制函数
- * 
- * @param dev 
- * @param pos 
+ *
+ * @param dev
+ * @param pos
  * @param vel 这个速度是梯形加速度运行下的最高速度，也就是匀速段的速度值。
- * @return int 
+ * @return int
  */
 static inline int motor_dm_posvel_ctrl(const struct device *dev, float pos, float vel)
 {
@@ -525,7 +525,7 @@ static inline int motor_dm_posvel_ctrl(const struct device *dev, float pos, floa
     {
         LOG_ERR("[dm_motor_err] Device config or data is NULL");
         return -EINVAL;
-    }  
+    }
 
     uint8_t *pbuf,*vbuf;
     pbuf = (uint8_t *)&pos;
@@ -544,10 +544,10 @@ static inline int motor_dm_posvel_ctrl(const struct device *dev, float pos, floa
 
 /**
  * @brief 达妙电机速度控制模式，需要注意这个报文的dlc应该是4
- * 
- * @param dev 
- * @param vel 
- * @return int 
+ *
+ * @param dev
+ * @param vel
+ * @return int
  */
 static inline int motor_dm_vel_ctrl(const struct device *dev, float vel)
 {
@@ -557,7 +557,7 @@ static inline int motor_dm_vel_ctrl(const struct device *dev, float vel)
     {
         LOG_ERR("[dm_motor_err] Device config or data is NULL");
         return -EINVAL;
-    }  
+    }
 
     uint8_t *vbuf;
     vbuf = (uint8_t *)&vel;

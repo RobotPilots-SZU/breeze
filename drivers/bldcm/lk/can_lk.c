@@ -187,7 +187,7 @@ static int motor_lk_can_tx_fillbuffer_handler(struct can_frame *frame, void *use
 			k_spinlock_key_t key = k_spin_lock(&data->lock);
 			frame->dlc = 8;
 			frame->flags = 0;
-			int diff = cfg->rx_id % 10;
+			int diff = cfg->rx_id & 0x0F;
 			if (diff <= 0 || diff > 8) {
 				LOG_ERR("[dji_motor_err] tx handle invalid id difference: tx_id=%d, rx_id=%d", cfg->tx_id, cfg->rx_id);
 				k_spin_unlock(&data->lock, key);
@@ -205,7 +205,7 @@ static int motor_lk_can_tx_fillbuffer_handler(struct can_frame *frame, void *use
 				k_spin_unlock(&data->lock, key);
 				return -EFAULT;
 			}
-			memcpy(&frame->data[idx], &data->motor_data.tx_data[0], 2);    
+			memcpy(&frame->data[idx], &data->motor_data.tx_data[0], 2);
 			k_spin_unlock(&data->lock, key);
 			return 0;
 		}
