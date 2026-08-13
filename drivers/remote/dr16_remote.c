@@ -66,25 +66,66 @@ static void rc_keyboard_cnt_max_set(rc_sensor_t* sensor) {
   sensor->info->Ctrl.cnt_max = KEY_CTRL_CNT_MAX;
 }
 
-/**
- */
-static void rc_interrupt_update(rc_sensor_t* sensor) {
-  /* 鼠标速度均值滤波 */
-  static int16_t mouse_x[REMOTE_SMOOTH_TIMES], mouse_y[REMOTE_SMOOTH_TIMES];
-  static int16_t index = 0;
+static void rc_keyboard_cnt_set(rc_sensor_info_t* new_info,const rc_sensor_info_t* old_info) 
+{
+  new_info->mouse_btn_l.cnt = old_info->mouse_btn_l.cnt;
+  new_info->mouse_btn_l.last_status = old_info->mouse_btn_l.status;
+  new_info->mouse_btn_r.cnt = old_info->mouse_btn_r.cnt;
+  new_info->mouse_btn_r.last_status = old_info->mouse_btn_r.status;
+  new_info->Q.cnt = old_info->Q.cnt;
+  new_info->Q.status = old_info->Q.status;
+  new_info->W.cnt = old_info->W.cnt;
+  new_info->W.status = old_info->W.status;
+  new_info->E.cnt = old_info->E.cnt;
+  new_info->E.status = old_info->E.status;
+  new_info->R.cnt = old_info->R.cnt;
+  new_info->R.status = old_info->R.status;
+  new_info->A.cnt = old_info->A.cnt;
+  new_info->A.status = old_info->A.status;
+  new_info->S.cnt = old_info->S.cnt;
+  new_info->S.status = old_info->S.status;
+  new_info->D.cnt = old_info->D.cnt;
+  new_info->D.status = old_info->D.status;
+  new_info->F.cnt = old_info->F.cnt;
+  new_info->F.status = old_info->F.status;
+  new_info->G.cnt = old_info->G.cnt;
+  new_info->G.status = old_info->G.status;
+  new_info->Z.cnt = old_info->Z.cnt;
+  new_info->Z.status = old_info->Z.status;
+  new_info->X.cnt = old_info->X.cnt;
+  new_info->X.status = old_info->X.status;
+  new_info->C.cnt = old_info->C.cnt;
+  new_info->C.status = old_info->C.status;
+  new_info->V.cnt = old_info->V.cnt;
+  new_info->V.status = old_info->V.status;
+  new_info->B.cnt = old_info->B.cnt;
+  new_info->B.status = old_info->B.status;
+  new_info->Shift.cnt = old_info->Shift.cnt;
+  new_info->Shift.status = old_info->Shift.status;
+  new_info->Ctrl.cnt = old_info->Ctrl.cnt;
+  new_info->Ctrl.status = old_info->Ctrl.status;
+  new_info->mouse_x = old_info->mouse_x;
+  new_info->mouse_y = old_info->mouse_y;
+}
 
-  if (index == REMOTE_SMOOTH_TIMES) {
-    index = 0;
-  }
+static void rc_interrupt_update(rc_sensor_t *sensor)
+{
+	/* 鼠标速度均值滤波 */
+	static int16_t mouse_x[REMOTE_SMOOTH_TIMES], mouse_y[REMOTE_SMOOTH_TIMES];
+	static int16_t index = 0;
 
-  sensor->info->mouse_x -= (float)mouse_x[index] / (float)REMOTE_SMOOTH_TIMES;
-  sensor->info->mouse_y -= (float)mouse_y[index] / (float)REMOTE_SMOOTH_TIMES;
-  mouse_x[index] = sensor->info->mouse_vx;
-  mouse_y[index] = sensor->info->mouse_vy;
-  sensor->info->mouse_x += (float)mouse_x[index] / (float)REMOTE_SMOOTH_TIMES;
-  sensor->info->mouse_y += (float)mouse_y[index] / (float)REMOTE_SMOOTH_TIMES;
+	if (index == REMOTE_SMOOTH_TIMES) {
+		index = 0;
+	}
 
-  index++;
+	sensor->info->mouse_x -= (float)mouse_x[index] / (float)REMOTE_SMOOTH_TIMES;
+	sensor->info->mouse_y -= (float)mouse_y[index] / (float)REMOTE_SMOOTH_TIMES;
+	mouse_x[index] = sensor->info->mouse_vx;
+	mouse_y[index] = sensor->info->mouse_vy;
+	sensor->info->mouse_x += (float)mouse_x[index] / (float)REMOTE_SMOOTH_TIMES;
+	sensor->info->mouse_y += (float)mouse_y[index] / (float)REMOTE_SMOOTH_TIMES;
+
+	index++;
 }
 
 /**
@@ -466,6 +507,7 @@ static void rc_sensor_update(const struct device* dev, uint8_t* rx_buf) {
 
   rc_info_new.offline_max_cnt = sensor->info->offline_max_cnt;
   memcpy(rc_info_new.tw_step_value, sensor->info->tw_step_value, sizeof(rc_info_new.tw_step_value));
+  rc_keyboard_cnt_set(&rc_info_new, sensor->info);
   memcpy(sensor->info, &rc_info_new, sizeof(rc_sensor_info_t));
 
   rc_keyboard_cnt_max_set(sensor);
