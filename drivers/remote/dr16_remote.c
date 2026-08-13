@@ -69,9 +69,9 @@ static void rc_keyboard_cnt_max_set(rc_sensor_t* sensor) {
 static void rc_keyboard_cnt_set(rc_sensor_info_t* new_info,const rc_sensor_info_t* old_info) 
 {
   new_info->mouse_btn_l.cnt = old_info->mouse_btn_l.cnt;
-  new_info->mouse_btn_l.last_status = old_info->mouse_btn_l.status;
+  new_info->mouse_btn_l.status = old_info->mouse_btn_l.status;
   new_info->mouse_btn_r.cnt = old_info->mouse_btn_r.cnt;
-  new_info->mouse_btn_r.last_status = old_info->mouse_btn_r.status;
+  new_info->mouse_btn_r.status = old_info->mouse_btn_r.status;
   new_info->Q.cnt = old_info->Q.cnt;
   new_info->Q.status = old_info->Q.status;
   new_info->W.cnt = old_info->W.cnt;
