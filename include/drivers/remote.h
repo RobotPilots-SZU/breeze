@@ -84,7 +84,7 @@ extern "C" {
 /* ----------------------- Macro Helpers (accepts rc_sensor_info_t ptr)
  * -------------------------------- */
 #define REMOTE_SW1_VALUE(p) (p)((p)->s1)
-#define REMOTE_SW2_VALUE(p) (p)((p)->s1)
+#define REMOTE_SW2_VALUE(p) (p)((p)->s2)
 #define REMOTE_LEFT_CH_LR_VALUE(p) ((p)->ch2)
 #define REMOTE_LEFT_CH_UD_VALUE(p) ((p)->ch3)
 #define REMOTE_RIGH_CH_LR_VALUE(p) ((p)->ch0)
