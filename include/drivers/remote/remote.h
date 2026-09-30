@@ -1,4 +1,4 @@
-/* breeze/include/drivers/remote.h */
+/* breeze/include/drivers/remote/remote.h */
 /*
  * Copyright (c) 2025 RobotPilots
  * SPDX-License-Identifier: Apache-2.0
@@ -61,6 +61,7 @@ extern "C" {
 /* 检测按键长按时间 */
 #define MOUSE_BTN_L_CNT_MAX 500  // ms 鼠标左键
 #define MOUSE_BTN_R_CNT_MAX 500  // ms 鼠标右键
+#define MOUSE_BTN_M_CNT_MAX 500  // ms 鼠标中键
 #define KEY_Q_CNT_MAX 500        // ms Q键
 #define KEY_W_CNT_MAX 1000       // ms W键
 #define KEY_E_CNT_MAX 500        // ms E键
@@ -83,13 +84,13 @@ extern "C" {
 
 /* ----------------------- Macro Helpers (accepts rc_sensor_info_t ptr)
  * -------------------------------- */
-#define REMOTE_SW1_VALUE(p) (p)((p)->s1)
-#define REMOTE_SW2_VALUE(p) (p)((p)->s2)
+#define REMOTE_SW1_VALUE(p) ((p)->s1)
+#define REMOTE_SW2_VALUE(p) ((p)->s2)
 #define REMOTE_LEFT_CH_LR_VALUE(p) ((p)->ch2)
 #define REMOTE_LEFT_CH_UD_VALUE(p) ((p)->ch3)
 #define REMOTE_RIGH_CH_LR_VALUE(p) ((p)->ch0)
 #define REMOTE_RIGH_CH_UD_VALUE(p) ((p)->ch1)
-#define REMOTE_THUMB_WHEEL_VALUE (p)((p)->thumbwheel)
+#define REMOTE_THUMB_WHEEL_VALUE(p) ((p)->thumbwheel.value)
 
 #define REMOTE_SW1_UP(p) ((p)->s1 == RC_SW_UP)
 #define REMOTE_SW1_MID(p) ((p)->s1 == RC_SW_MID)
@@ -162,6 +163,7 @@ typedef struct {
   int16_t ch3;
   uint8_t s1;
   uint8_t s2;
+  uint8_t mode_switch;           // 挡位开关：VT13 为 0/1/2(=C/N/S)，DT7 恒 0
   thumbwheel_info_t thumbwheel;  // 拨轮
 
   /* 键鼠 */
@@ -173,6 +175,7 @@ typedef struct {
   float mouse_z;                 // 鼠标z轴滤波后速度
   key_board_info_t mouse_btn_l;  // 鼠标左键
   key_board_info_t mouse_btn_r;  // 鼠标右键
+  key_board_info_t mouse_btn_m;  // 鼠标中键：VT13 有，DT7 恒 0
   key_board_info_t Q;
   key_board_info_t W;
   key_board_info_t E;
@@ -190,6 +193,18 @@ typedef struct {
   key_board_info_t Shift;
   key_board_info_t Ctrl;
   uint16_t key_v;
+
+  /* VT13 专有按键（DT7 恒 0） */
+  uint8_t stop;          // 暂停按键
+  uint8_t left_button;   // 自定义按键(左)
+  uint8_t right_button;  // 自定义按键(右)
+  uint8_t shutter;       // 扳机键
+
+  /* 跨帧状态：原地解析时必须保留，不能随每帧清零 */
+  int16_t mouse_vx_win[REMOTE_SMOOTH_TIMES];  // 鼠标 x 轴均值滤波窗口
+  int16_t mouse_vy_win[REMOTE_SMOOTH_TIMES];  // 鼠标 y 轴均值滤波窗口
+  uint8_t mouse_win_idx;                      // 滤波窗口写指针
+  int16_t thumbwheel_record;                  // 拨轮本次行程峰值（用于跳变判定）
 
   int16_t offline_cnt;
   int16_t offline_max_cnt;

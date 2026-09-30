@@ -1,4 +1,4 @@
-#include <drivers/remote.h>
+#include <drivers/remote/remote.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
