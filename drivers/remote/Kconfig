@@ -12,15 +12,82 @@ module = REMOTE
 module-str = Remote
 source "subsys/logging/Kconfig.template.log_config"
 
+# 协议选择。choice 里的成员 config 不能跨文件 source，所以两个驱动的
+# symbol 直接写在这里，不再拆 Kconfig.DT7 / Kconfig.VT13——拆了就得在主
+# 文件里另抄一份 choice 成员，两边容易走散。
+#
+# 注意 DTS 与 Kconfig 是单向关系：Kconfig 能读 DT_HAS_*_ENABLED，反之不行。
+# DT_HAS_RP_VT13_REMOTE_ENABLED 这类符号由 dts/bindings/ 下的 yaml 生成，
+# 其取值再由最终 DTS 里有没有对应的 status="okay" 节点决定。
+
+choice REMOTE_PROTOCOL
+    prompt "Remote protocol"
+    default REMOTE_PROTOCOL_DT7
+    help
+      Which remote controller protocol to build in. Exactly one driver is
+      compiled; switch without adding a build directory, e.g.:
+
+        west build -d build -- -DCONFIG_REMOTE_PROTOCOL_VT13=y \
+                               -DCONFIG_REMOTE_PROTOCOL_DT7=n
+
+      Both options must be spelled out: Zephyr caches every CONFIG_* passed
+      on the command line and replays it on later invocations, so leaving
+      the old one out silently keeps the old protocol selected.
+
+      An option whose devicetree node is missing or disabled cannot be
+      selected, so the choice falls back to the other one rather than
+      silently building nothing.
+
+config REMOTE_PROTOCOL_DT7
+    bool "DT7 (DBUS, 100000 8E1, 18-byte frame)"
+    depends on DT_HAS_RP_REMOTE_ENABLED
+
+config REMOTE_PROTOCOL_VT13
+    bool "VT13 / VT03 (921600 8N1, 21-byte frame)"
+    depends on DT_HAS_RP_VT13_REMOTE_ENABLED
+
+endchoice
+
+config DT7_REMOTE
+    bool
+    default y if REMOTE_PROTOCOL_DT7
+    help
+      DJI DT7 remote controller, DBUS protocol (normally through a DR16
+      receiver). Selected by REMOTE_PROTOCOL_DT7; requires a devicetree
+      node with compatible = "rp,remote".
+
+config VT13_REMOTE
+    bool
+    default y if REMOTE_PROTOCOL_VT13
+    help
+      DJI VT13/VT03 image transmission remote controller. Selected by
+      REMOTE_PROTOCOL_VT13; requires a devicetree node with
+      compatible = "rp,vt13-remote".
+
 config REMOTE_INIT_PRIORITY
-    int "DR16 remote init priority"
+    int "Remote init priority"
     default 80
     range 0 99
-    depends on DR16_REMOTE
+    depends on DT7_REMOTE || VT13_REMOTE
     help
       Device init priority at POST_KERNEL stage.
 
+# 下面两项由 rc_thread.c 的所有协议共用。放在 if REMOTE 内，
+# 因此不需要再 depends on 具体协议 symbol——否则没选协议时会变成未定义宏。
 
-rsource "./Kconfig.DR16"
+config REMOTE_PARSE_THREAD_STACK_SIZE
+    int "Remote parse thread stack size"
+    default 2048
+    help
+      Stack size of the shared remote parse thread (drivers/remote/rc_thread.c).
+      Raise it if CONFIG_REMOTE_LOG_LEVEL is set to DBG, which logs a lot.
+
+config REMOTE_PARSE_THREAD_PRIO
+    int "Remote parse thread priority"
+    default 7
+    range -16 14
+    help
+      Priority of the shared remote parse thread. It must keep up with one
+      frame per 14 ms but should not preempt the control loop.
 
 endif # REMOTE

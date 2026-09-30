@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 description:
-  DJI DT7 Remote Controller (DBUS protocol, normally via a DR16 receiver)
+  DJI VT13 / VT03 image transmission remote controller. 921600 8N1,
+  21-byte frame starting with 0xA9 0x53 and ending with a CRC16.
 
-compatible: "rp,remote"
+compatible: "rp,vt13-remote"
 
 properties:
   uart:
