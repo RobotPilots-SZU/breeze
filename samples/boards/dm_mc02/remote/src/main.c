@@ -1,3 +1,5 @@
+#include "rc_thread.h"
+
 #include <drivers/remote/remote.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
@@ -41,7 +43,12 @@ int remote_app_init(void) {
     return -1;
   }
 
-  remote_set_data_ready_cb(remote_dev, remote_data_ready, &my_app_data);
+  /* 组帧 + 解析线程在应用侧，见 src/rc_thread.c */
+  if (rc_parse_attach(remote_dev) < 0) {
+    LOG_ERR("Failed to attach remote parser");
+    return -1;
+  }
+  rc_parse_set_data_ready_cb(remote_dev, remote_data_ready, &my_app_data);
   return 0;
 }
 

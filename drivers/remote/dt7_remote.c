@@ -7,7 +7,6 @@
 #define DT_DRV_COMPAT rp_remote
 
 #include <drivers/remote/rc_common.h>
-#include <drivers/remote/rc_thread.h>
 #include <drivers/remote/remote.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
@@ -37,7 +36,9 @@ struct rc_sensor_data {
   rc_sensor_info_t info;
   uint8_t dma_buf[2][36] __aligned(32);
   uint8_t dma_buf_idx;
-  rc_parser_t parser;  /* 组帧上下文（环形缓冲 + 帧状态），解析线程持有 */
+  /* 驱动不做组帧，收到的字节原样交给应用 */
+  remote_rx_cb_t rx_cb;
+  void* rx_user_data;
   struct k_work_delayable heartbeat_work;
 };
 
@@ -113,7 +114,7 @@ static void rc_data_parse(const uint8_t* rx_buf, rc_sensor_info_t* info) {
 }
 
 /**
- * DT7/DBUS 既无帧头也无 CRC，只靠 rc_thread 的间隙法组帧，
+ * DT7/DBUS 既无帧头也无 CRC，应用侧的组帧只能靠间隙法，
  * 因此 frame_check 置 NULL —— 帧的合法性由 rc_sensor_check 的 ±660 限幅兜底。
  */
 static const rc_parser_ops_t dt7_parser_ops = {
@@ -121,6 +122,15 @@ static const rc_parser_ops_t dt7_parser_ops = {
     .frame_check = NULL,
     .parse = rc_data_parse,
 };
+
+/** 把 RX 事件转给应用；应用还没挂回调时直接丢 */
+static inline void rc_emit_rx(const struct device* dev, remote_rx_event_t ev,
+                              const uint8_t* buf, size_t len) {
+  struct rc_sensor_data* data = dev->data;
+  if (data->rx_cb != NULL) {
+    data->rx_cb(dev, ev, buf, len, data->rx_user_data);
+  }
+}
 
 static void uart_callback(const struct device* uart_dev,
                           struct uart_event* event, void* user_data) {
@@ -134,8 +144,8 @@ static void uart_callback(const struct device* uart_dev,
       uint8_t* chunk = event->data.rx.buf + event->data.rx.offset;
 
       LOG_HEXDUMP_DBG(chunk, len, "cur_chunk");
-      /* 只搬字节进环形缓冲；组帧、校验、解析、回调都在解析线程里 */
-      rc_parser_feed(&data->parser, chunk, len);
+      /* 不做任何组帧：字节原样交给应用，拼帧/校验/解析都在解析线程里 */
+      rc_emit_rx(dev, REMOTE_RX_DATA, chunk, len);
       break;
     }
 
@@ -150,8 +160,8 @@ static void uart_callback(const struct device* uart_dev,
     case UART_RX_DISABLED:
       LOG_WRN("RX_DISABLED: re-enabling UART RX");
       data->dma_buf_idx = 0;
-      /* 丢掉半帧和缓冲里没来得及解析的字节，避免拼出假帧 */
-      rc_parser_reset(&data->parser);
+      /* 让应用丢掉半帧和环形缓冲里的残留，避免拼出假帧 */
+      rc_emit_rx(dev, REMOTE_RX_RESET, NULL, 0);
       uart_rx_enable(cfg->uart, data->dma_buf[0], sizeof(data->dma_buf[0]),
                      1000);
       break;
@@ -199,15 +209,12 @@ static int rc_sensor_init(const struct device* dev) {
   /* 阈值是配置，只在初始化时写一次；解析改成原地后不会再把它们冲掉 */
   rc_keyboard_cnt_max_set(sensor);
 
-  /* 必须在 uart_rx_enable 之前注册，否则第一帧会被丢进未初始化的 parser */
-  int ret = rc_parser_register(&data->parser, &dt7_parser_ops, dev, sensor);
-  if (ret < 0) {
-    LOG_ERR("Failed to register parser: %d", ret);
-    sensor->err = DEV_INIT_ERR;
-    return ret;
-  }
+  /* 应用挂上 rx_cb 之前的字节会被丢掉，这是有意的：
+   * 驱动不缓存，也不替应用决定帧从哪开始。 */
+  data->rx_cb = NULL;
+  data->rx_user_data = NULL;
 
-  ret = uart_callback_set(cfg->uart, uart_callback, (void*)dev);
+  int ret = uart_callback_set(cfg->uart, uart_callback, (void*)dev);
   if (ret < 0) {
     LOG_ERR("Failed to set UART callback: %d", ret);
     sensor->err = DEV_INIT_ERR;
@@ -235,16 +242,22 @@ static rc_sensor_t* rc_get_sensor(const struct device* dev) {
   return &data->sensor;
 }
 
-static void rc_set_data_ready_cb(const struct device* dev,
-                                 remote_data_ready_cb_t cb, void* user_data) {
+static void rc_set_rx_cb(const struct device* dev, remote_rx_cb_t cb,
+                         void* user_data) {
   struct rc_sensor_data* data = dev->data;
-  /* cb 由解析线程调用（不再是中断上下文），见 rc_thread.h 的说明 */
-  rc_parser_set_data_ready_cb(&data->parser, cb, user_data);
+  data->rx_cb = cb;
+  data->rx_user_data = user_data;
+}
+
+static const rc_parser_ops_t* rc_get_parser_ops(const struct device* dev) {
+  ARG_UNUSED(dev);
+  return &dt7_parser_ops;
 }
 
 static const struct remote_driver_api remote_sensor_api = {
     .get_sensor = rc_get_sensor,
-    .set_data_ready_cb = rc_set_data_ready_cb,
+    .set_rx_cb = rc_set_rx_cb,
+    .get_parser_ops = rc_get_parser_ops,
 };
 
 /**

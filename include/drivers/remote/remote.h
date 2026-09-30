@@ -9,6 +9,7 @@
 
 #include <errno.h>
 #include <math.h>
+#include <stddef.h>
 #include <zephyr/device.h>
 #include <zephyr/types.h>
 
@@ -219,19 +220,73 @@ typedef struct {
   dev_errno_t err;
 } rc_sensor_t;
 
+/* ----------------------- 协议描述 -------------------------------- */
+
+/** 一帧的终检结果 */
+typedef enum {
+  RC_FRAME_OK = 0, /**< 通过，交给 parse */
+  RC_FRAME_DROP,   /**< 帧头/CRC16 不通过，整帧丢弃 */
+} rc_frame_check_t;
+
+/**
+ * @brief	协议差异描述
+ *
+ * 驱动只描述「本协议的帧长什么样、拿到整帧后怎么解」，不参与组帧：
+ * 字节怎么拼成帧、拼好的帧什么时候被解析、在哪个线程解析，都是应用的事。
+ */
+typedef struct {
+  uint8_t frame_size; /**< DT7 = 18，VT13 = 21 */
+
+  /**
+   * 整帧终检，可为 NULL。
+   *
+   * DT7 无帧头无 CRC，只能靠间隙法，置 NULL 即可；
+   * VT13 在这里校验帧头 + CRC16。返回 RC_FRAME_DROP 时该帧被丢弃，
+   * 不会调用 parse，也不会计入解析统计。
+   */
+  rc_frame_check_t (*frame_check)(const uint8_t* frame, uint8_t len);
+
+  /** 原地解析：只写本帧携带的信号量，跨帧状态原样保留 */
+  void (*parse)(const uint8_t* frame, rc_sensor_info_t* info);
+} rc_parser_ops_t;
+
+/* ----------------------- RX 字节回调 -------------------------------- */
+
+/** RX 事件 */
+typedef enum {
+  REMOTE_RX_DATA,  /**< 收到一段字节，buf/len 有效 */
+  REMOTE_RX_RESET, /**< UART 重启，应用应丢掉半帧和环形缓冲里的残留 */
+} remote_rx_event_t;
+
+/**
+ * @brief	UART 收到的原始字节回调
+ *
+ * **中断上下文**调用。驱动不做任何组帧，收到什么就原样交出去什么。
+ */
+typedef void (*remote_rx_cb_t)(const struct device* dev, remote_rx_event_t ev,
+                               const uint8_t* buf, size_t len, void* user_data);
+
 /* ----------------------- Driver API -------------------------------- */
 
 typedef rc_sensor_t* (*remote_api_get_sensor)(const struct device* dev);
 
 typedef void (*remote_data_ready_cb_t)(const struct device* dev,
                                        rc_sensor_t* sensor, void* user_data);
-typedef void (*remote_api_set_data_ready_cb)(const struct device* dev,
-                                             remote_data_ready_cb_t cb,
-                                             void* user_data);
 
+typedef void (*remote_api_set_rx_cb)(const struct device* dev,
+                                     remote_rx_cb_t cb, void* user_data);
+
+typedef const rc_parser_ops_t* (*remote_api_get_parser_ops)(
+    const struct device* dev);
+
+/**
+ * 驱动只做三件事：交出 sensor、把 UART 字节转给 set_rx_cb、说明本协议帧的格式。
+ * 组帧和解析线程不在驱动里。
+ */
 struct remote_driver_api {
   remote_api_get_sensor get_sensor;
-  remote_api_set_data_ready_cb set_data_ready_cb;
+  remote_api_set_rx_cb set_rx_cb;
+  remote_api_get_parser_ops get_parser_ops;
 };
 
 static inline rc_sensor_t* remote_get_sensor(const struct device* dev) {
@@ -243,16 +298,36 @@ static inline rc_sensor_t* remote_get_sensor(const struct device* dev) {
   return api->get_sensor(dev);
 }
 
-static inline int remote_set_data_ready_cb(const struct device* dev,
-                                           remote_data_ready_cb_t cb,
-                                           void* user_data) {
+/**
+ * @brief	注册原始字节回调
+ *
+ * 回调在中断上下文执行，只应该做搬运（例如推进环形缓冲），不要在里面解析。
+ * 注册之前的字节会被丢弃。
+ */
+static inline int remote_set_rx_cb(const struct device* dev,
+                                   remote_rx_cb_t cb, void* user_data) {
   const struct remote_driver_api* api =
       (const struct remote_driver_api*)dev->api;
-  if (!api || api->set_data_ready_cb == NULL) {
+  if (!api || api->set_rx_cb == NULL) {
     return -ENOSYS;
   }
-  api->set_data_ready_cb(dev, cb, user_data);
+  api->set_rx_cb(dev, cb, user_data);
   return 0;
+}
+
+/**
+ * @brief	取本协议的帧描述
+ *
+ * 应用拿到之后用它建组帧上下文（见 samples 里的 rc_thread.c）。
+ */
+static inline const rc_parser_ops_t* remote_get_parser_ops(
+    const struct device* dev) {
+  const struct remote_driver_api* api =
+      (const struct remote_driver_api*)dev->api;
+  if (!api || api->get_parser_ops == NULL) {
+    return NULL;
+  }
+  return api->get_parser_ops(dev);
 }
 
 #ifdef __cplusplus
