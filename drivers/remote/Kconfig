@@ -72,22 +72,7 @@ config REMOTE_INIT_PRIORITY
     help
       Device init priority at POST_KERNEL stage.
 
-# 下面两项由 rc_thread.c 的所有协议共用。放在 if REMOTE 内，
-# 因此不需要再 depends on 具体协议 symbol——否则没选协议时会变成未定义宏。
-
-config REMOTE_PARSE_THREAD_STACK_SIZE
-    int "Remote parse thread stack size"
-    default 2048
-    help
-      Stack size of the shared remote parse thread (drivers/remote/rc_thread.c).
-      Raise it if CONFIG_REMOTE_LOG_LEVEL is set to DBG, which logs a lot.
-
-config REMOTE_PARSE_THREAD_PRIO
-    int "Remote parse thread priority"
-    default 7
-    range -16 14
-    help
-      Priority of the shared remote parse thread. It must keep up with one
-      frame per 14 ms but should not preempt the control loop.
+# rc_thread.c 的两项线程参数（栈大小 / 优先级）不在这里，它们属于应用侧：
+# 解析线程由应用自己建，配置项跟着实现走，见 samples/boards/dm_mc02/remote/Kconfig。
 
 endif # REMOTE
