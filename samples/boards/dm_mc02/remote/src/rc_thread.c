@@ -28,6 +28,14 @@ LOG_MODULE_REGISTER(rc_thread);
 /** 同时能挂几路遥控。DT7 和 VT13 通常只上一路，留两个余量 */
 #define RC_MAX_PARSERS 2
 
+/** 解析线程的栈大小与优先级。这两项只有本文件用，直接写在这里，
+ *  应用侧不再带 Kconfig（见 Kconfig 已删）。
+ *
+ *  栈调大的场合只有一个：CONFIG_REMOTE_LOG_LEVEL 开到 DBG 时日志量很大。
+ *  优先级要跟得上 14ms 一帧，但不应抢占控制环。 */
+#define RC_PARSE_THREAD_STACK_SIZE 2048
+#define RC_PARSE_THREAD_PRIO 7
+
 /** 一路遥控的组帧上下文 */
 typedef struct rc_parser {
   const struct device* dev;    /**< NULL 表示这个槽位空着 */
@@ -140,9 +148,9 @@ static void rc_parse_thread_fn(void* p1, void* p2, void* p3) {
   }
 }
 
-K_THREAD_DEFINE(rc_parse_thread, CONFIG_REMOTE_PARSE_THREAD_STACK_SIZE,
+K_THREAD_DEFINE(rc_parse_thread, RC_PARSE_THREAD_STACK_SIZE,
                 rc_parse_thread_fn, NULL, NULL, NULL,
-                CONFIG_REMOTE_PARSE_THREAD_PRIO, 0, 0);
+                RC_PARSE_THREAD_PRIO, 0, 0);
 
 /**
  *	@brief	丢掉半帧、清空环形缓冲

@@ -1,20 +1,3 @@
 source "Kconfig.zephyr"
 source "../../breeze/drivers/remote/Kconfig"
 
-# 解析线程由本应用提供（src/rc_thread.c），所以这两项跟着应用走，
-# 不再放在 drivers/remote/Kconfig 里。
-
-config REMOTE_PARSE_THREAD_STACK_SIZE
-    int "Remote parse thread stack size"
-    default 2048
-    help
-      Stack size of the shared remote parse thread (src/rc_thread.c).
-      Raise it if CONFIG_REMOTE_LOG_LEVEL is set to DBG, which logs a lot.
-
-config REMOTE_PARSE_THREAD_PRIO
-    int "Remote parse thread priority"
-    default 7
-    range -16 14
-    help
-      Priority of the shared remote parse thread. It must keep up with one
-      frame per 14 ms but should not preempt the control loop.
