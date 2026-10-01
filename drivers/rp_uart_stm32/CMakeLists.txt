@@ -3,4 +3,4 @@
 
 zephyr_library()
 
-zephyr_library_sources_ifdef(CONFIG_UART_STM32_FIX uart_stm32_fix.c)
+zephyr_library_sources_ifdef(CONFIG_RP_UART_STM32 rp_uart_stm32.c)

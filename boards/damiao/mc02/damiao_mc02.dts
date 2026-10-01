@@ -206,6 +206,7 @@
 /*---------------------usart config start----------------------------*/
 
 &usart1 {
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     current-speed = <921600>;
     clocks = <&rcc STM32_CLOCK(APB2, 4)>,
@@ -223,6 +224,7 @@
 
 &usart2 {
     // RS485
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1, 17)>,
              <&rcc STM32_SRC_PLL2_Q USART2345678_SEL(1)>;
@@ -233,6 +235,7 @@
 
 &usart3 {
     // RS485
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1, 18)>,
              <&rcc STM32_SRC_PLL2_Q USART2345678_SEL(1)>;
@@ -243,6 +246,7 @@
 
 &uart5 {
     // SBUS
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1, 20)>,
              <&rcc STM32_SRC_PLL2_Q USART2345678_SEL(1)>;
@@ -258,6 +262,7 @@
 };
 
 &uart7 {
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1, 30)>,
              <&rcc STM32_SRC_PLL2_Q USART2345678_SEL(1)>;
@@ -267,6 +272,7 @@
 };
 
 &uart8 {
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB1, 31)>,
              <&rcc STM32_SRC_PLL2_Q USART2345678_SEL(1)>;
@@ -276,6 +282,7 @@
 };
 
 &uart9 {
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB2, 6)>,
              <&rcc STM32_SRC_PLL2_Q USART16_SEL(1)>;
@@ -285,6 +292,7 @@
 };
 
 &usart10 {
+    compatible = "rp,st-stm32-uart";
     status = "okay";
     clocks = <&rcc STM32_CLOCK(APB2, 7)>,
              <&rcc STM32_SRC_PLL2_Q USART16_SEL(1)>;

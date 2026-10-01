@@ -4,10 +4,10 @@
 # Copyright (c) 2026 RobotPilots
 # SPDX-License-Identifier: Apache-2.0
 
-config UART_STM32_FIX
+config RP_UART_STM32
 	bool "STM32 MCU serial driver with per-direction API ownership"
 	default y
-	depends on DT_HAS_ST_STM32_UART_ENABLED && !UART_STM32
+	depends on DT_HAS_RP_ST_STM32_UART_ENABLED
 	select SERIAL_HAS_DRIVER
 	select SERIAL_SUPPORT_INTERRUPT
 	# the ASYNC implementation requires a DMA controller
@@ -26,18 +26,12 @@ config UART_STM32_FIX
 	  using the async API, so both APIs can be used at the same time on one
 	  instance.
 
-	  It replaces the in-tree driver, so keep CONFIG_UART_STM32 disabled
-	  while this one is enabled (both would drive the same device nodes).
+	  It replaces the in-tree driver ("st,stm32-uart"): the nodes it has to
+	  drive must use the "rp,st-stm32-uart" compatible instead.
 
-if UART_STM32_FIX
+if RP_UART_STM32
 
-# The DMAT errata workaround uses the same Kconfig symbols as the in-tree
-# driver, which only defines them inside "if UART_STM32". This driver is used
-# with the in-tree one disabled, so they are defined here too, otherwise the
-# workaround would silently be compiled out on the affected H5/U5 parts.
-if !UART_STM32
-
-config UART_STM32U5_ERRATA_DMAT_AFFECTED
+config RP_UART_STM32U5_ERRATA_DMAT_AFFECTED
 	bool
 	default y
 	depends on SOC_STM32H503XX || \
@@ -45,14 +39,14 @@ config UART_STM32U5_ERRATA_DMAT_AFFECTED
 		   SOC_STM32H562XX || SOC_STM32H563XX || SOC_STM32H573XX || \
 		   SOC_STM32U575XX || SOC_STM32U585XX
 	help
-	  Affected by the DMAT errata. See UART_STM32U5_ERRATA_DMAT.
+	  Affected by the DMAT errata. See RP_UART_STM32U5_ERRATA_DMAT.
 
-if UART_STM32U5_ERRATA_DMAT_AFFECTED
+if RP_UART_STM32U5_ERRATA_DMAT_AFFECTED
 
-choice UART_STM32U5_ERRATA_DMAT
+choice RP_UART_STM32U5_ERRATA_DMAT
 	prompt "Workaround for DMAT errata on selected devices"
-	default UART_STM32U5_ERRATA_DMAT_NOCLEAR if !PM
-	default UART_STM32U5_ERRATA_DMAT_LOWPOWER
+	default RP_UART_STM32U5_ERRATA_DMAT_NOCLEAR if !PM
+	default RP_UART_STM32U5_ERRATA_DMAT_LOWPOWER
 	help
 	  Handles erratum "USART does not generate DMA requests after
 	  setting/clearing DMAT bit" as described in the errata sheets:
@@ -62,24 +56,22 @@ choice UART_STM32U5_ERRATA_DMAT
 	  - STM32H562xx/H563xx/H573xx: ES0565 rev. 7, sections 2.16.2 and 2.17.1
 	  - STM32U575xx/U585xx: ES0499 rev. 10, sections 2.21.2 and 2.22.1
 
-config UART_STM32U5_ERRATA_DMAT_LOWPOWER
+config RP_UART_STM32U5_ERRATA_DMAT_LOWPOWER
 	bool "Send first byte by polling"
 	help
 	  This option sends first byte via software polling and
 	  rest of the buffer is sent via DMA. This option is suitable
 	  for STOP low-power modes.
 
-config UART_STM32U5_ERRATA_DMAT_NOCLEAR
+config RP_UART_STM32U5_ERRATA_DMAT_NOCLEAR
 	bool "Do not clear DMAT"
 	depends on !POWEROFF # DMAT must be clear to enter LL_PWR_SHUTDOWN_MODE
 	help
 	  This option keeps DMAT bit set. This may cause additional power
 	  consumption in STOP low-power modes.
 
-endchoice # UART_STM32U5_ERRATA_DMAT
+endchoice # RP_UART_STM32U5_ERRATA_DMAT
 
-endif # UART_STM32U5_ERRATA_DMAT_AFFECTED
+endif # RP_UART_STM32U5_ERRATA_DMAT_AFFECTED
 
-endif # !UART_STM32
-
-endif # UART_STM32_FIX
+endif # RP_UART_STM32

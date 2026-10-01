@@ -8,11 +8,11 @@
  * Drop-in replacement of the in-tree st,stm32-uart driver (Zephyr
  * v4.4.0-10192) built by this module. The interrupt API and the async API may
  * be used at the same time, one direction each; nothing else differs from
- * upstream. Enabled with CONFIG_UART_STM32_FIX, which requires the in-tree
- * CONFIG_UART_STM32 to stay off. Keep in sync with upstream.
+ * upstream. Enabled with CONFIG_RP_UART_STM32 on the nodes carrying the
+ * "rp,st-stm32-uart" compatible. Keep in sync with upstream.
  */
 
-#define DT_DRV_COMPAT st_stm32_uart
+#define DT_DRV_COMPAT rp_st_stm32_uart
 
 /**
  * @brief Driver for UART port on STM32 family processor.
@@ -39,7 +39,7 @@
 
 #include <zephyr/linker/sections.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
-#include <drivers/uart_stm32_fix.h>
+#include <drivers/rp_uart_stm32.h>
 
 #include <stm32_ll_bus.h>
 #include <stm32_ll_usart.h>
@@ -55,7 +55,7 @@
 
 #include <zephyr/logging/log.h>
 #include <zephyr/irq.h>
-LOG_MODULE_REGISTER(uart_stm32_fix, CONFIG_UART_LOG_LEVEL);
+LOG_MODULE_REGISTER(rp_uart_stm32, CONFIG_UART_LOG_LEVEL);
 
 #if defined(CONFIG_STM32_HAL2)
 #define STM32_USART_STOP_BIT_0_5	LL_USART_STOP_BIT_0_5
@@ -1569,7 +1569,7 @@ static inline void uart_stm32_dma_tx_enable(const struct device *dev)
 
 static inline void uart_stm32_dma_tx_disable(const struct device *dev)
 {
-#ifdef CONFIG_UART_STM32U5_ERRATA_DMAT_NOCLEAR
+#ifdef CONFIG_RP_UART_STM32U5_ERRATA_DMAT_NOCLEAR
 	ARG_UNUSED(dev);
 
 	/*
@@ -1590,7 +1590,7 @@ static inline void uart_stm32_dma_rx_enable(const struct device *dev)
 	struct uart_stm32_data *data = dev->data;
 	USART_TypeDef *usart = config->usart;
 
-#ifdef CONFIG_UART_STM32U5_ERRATA_DMAT_AFFECTED
+#ifdef CONFIG_RP_UART_STM32U5_ERRATA_DMAT_AFFECTED
 	/*
 	 * Workaround for STM32H5/U5: USART does not generate DMA requests
 	 * after clearing/setting DMAR. This issue is not documented in the
@@ -1604,7 +1604,7 @@ static inline void uart_stm32_dma_rx_enable(const struct device *dev)
 	while (!LL_USART_IsActiveFlag_TEACK(usart)) {
 		/* busy-wait for transmit enable acknowledge */
 	}
-#endif /* CONFIG_UART_STM32U5_ERRATA_DMAT_AFFECTED */
+#endif /* CONFIG_RP_UART_STM32U5_ERRATA_DMAT_AFFECTED */
 
 	LL_USART_EnableDMAReq_RX(usart);
 	data->dma_rx.enabled = true;
@@ -1833,9 +1833,9 @@ static int uart_stm32_async_tx(const struct device *dev,
 	 * polling and don't need to prepare a DMA descriptor.
 	 * In other configurations, the DMA is always used.
 	 */
-	if (!IS_ENABLED(CONFIG_UART_STM32U5_ERRATA_DMAT_LOWPOWER) ||
+	if (!IS_ENABLED(CONFIG_RP_UART_STM32U5_ERRATA_DMAT_LOWPOWER) ||
 	    data->dma_tx.buffer_length > char_size) {
-		if (IS_ENABLED(CONFIG_UART_STM32U5_ERRATA_DMAT_LOWPOWER)) {
+		if (IS_ENABLED(CONFIG_RP_UART_STM32U5_ERRATA_DMAT_LOWPOWER)) {
 			/* set source address */
 			data->dma_tx.blk_cfg.source_address =
 				((uint32_t)data->dma_tx.buffer) + char_size;
@@ -1869,7 +1869,7 @@ static int uart_stm32_async_tx(const struct device *dev,
 	uart_stm32_pm_policy_state_lock_get_unconditional();
 #endif
 
-	if (IS_ENABLED(CONFIG_UART_STM32U5_ERRATA_DMAT_LOWPOWER)) {
+	if (IS_ENABLED(CONFIG_RP_UART_STM32U5_ERRATA_DMAT_LOWPOWER)) {
 		/**
 		 * Send first character using polling.
 		 * The DMA TX needs to be enabled before the UART transmits
