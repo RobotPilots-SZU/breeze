@@ -66,7 +66,9 @@ static rc_parser_t* rc_parser_find(const struct device* dev) {
  *	@brief	一帧通过终检后的公共处理
  *
  * 顺序与原来的实现一致：
- * 解析 → 按键状态机 → 数据校验 → 鼠标滤波 → 置在线 → 应用回调
+ * 解析 → 数据校验 → 鼠标滤波 → 置在线 → 应用回调
+ *
+ * 按键状态机（rc_keyboard_update()）不在这里推进，由使用方按自己的节奏调用。
  */
 static void rc_parser_handle_frame(rc_parser_t* parser) {
   const rc_parser_ops_t* ops = parser->ops;
@@ -82,7 +84,6 @@ static void rc_parser_handle_frame(rc_parser_t* parser) {
 
   ops->parse(parser->frame, sensor->info);
 
-  rc_keyboard_update(sensor->info);
   rc_sensor_check(sensor);
   rc_interrupt_update(sensor);
 

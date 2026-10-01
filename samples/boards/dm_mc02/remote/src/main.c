@@ -1,9 +1,11 @@
 #include "rc_thread.h"
 
+#include <drivers/remote/rc_common.h>
 #include <drivers/remote/remote.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/util.h>
 
 LOG_MODULE_REGISTER(remote_app, LOG_LEVEL_INF);
 
@@ -14,6 +16,25 @@ LOG_MODULE_REGISTER(remote_app, LOG_LEVEL_INF);
 
 static const struct device* remote_dev;
 static rc_sensor_t* sensor;
+
+/**
+ *	@brief	按键状态机的 1ms 节拍
+ *
+ * rc_keyboard_update() 每调一次给按住时长 +1，所以固定 1ms 调用时
+ * key_board_info_t::cnt 的单位就是毫秒，与 KEY_*_CNT_MAX 的注释对应。
+ *
+ * 回调运行在系统时钟中断上下文。掉线时直接跳过：否则 value 会停在最后一帧的
+ * 按下态，cnt 一路涨到 cnt_max，按键被永久判成长按。
+ */
+static void rc_key_tick(struct k_timer* timer) {
+  ARG_UNUSED(timer);
+
+  if (sensor != NULL && sensor->is_online) {
+    rc_keyboard_update(sensor->info);
+  }
+}
+
+K_TIMER_DEFINE(rc_key_timer, rc_key_tick, NULL);
 
 struct app_data {
   uint32_t last_receive_time;
@@ -49,6 +70,9 @@ int remote_app_init(void) {
     return -1;
   }
   rc_parse_set_data_ready_cb(remote_dev, remote_data_ready, &my_app_data);
+
+  /* 1ms 周期推进按键状态机，见 rc_key_tick() */
+  k_timer_start(&rc_key_timer, K_MSEC(1), K_MSEC(1));
   return 0;
 }
 
