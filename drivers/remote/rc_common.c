@@ -35,6 +35,9 @@ void rc_keyboard_cnt_max_set(rc_sensor_t* sensor) {
 /**
  *	@brief	更新键盘按键状态
  *  release -> release_to_press -> short_press -> long_press -> press_to_release
+ *
+ *  调用周期必须是 1ms：下面每次 cnt++ 代表按住时长 +1ms，
+ *  这样 cnt/cnt_max 与 KEY_*_CNT_MAX 的 ms 注释才对得上。
  */
 static void rc_keyboard_status_update(key_board_info_t* key) {
   key->last_status = key->status;

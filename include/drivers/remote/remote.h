@@ -103,8 +103,9 @@ extern "C" {
 #define MOUSE_X_MOVE_SPEED(p) ((p)->mouse_vx)
 #define MOUSE_Y_MOVE_SPEED(p) ((p)->mouse_vy)
 #define MOUSE_Z_MOVE_SPEED(p) ((p)->mouse_vz)
-#define MOUSE_PRESSED_LEFT(p) ((p)->mouse_btn_l == 1)
-#define MOUSE_PRESSED_RIGHT(p) ((p)->mouse_btn_r == 1)
+#define MOUSE_PRESSED_LEFT(p) ((p)->mouse_btn_l.value == 1)
+#define MOUSE_PRESSED_RIGHT(p) ((p)->mouse_btn_r.value == 1)
+#define MOUSE_PRESSED_MIDDLE(p) ((p)->mouse_btn_m.value == 1)
 #define KEY_PRESSED(p) ((p)->key_v)
 #define KEY_PRESSED_W(p) (((p)->key_v & KEY_PRESSED_OFFSET_W) != 0)
 #define KEY_PRESSED_S(p) (((p)->key_v & KEY_PRESSED_OFFSET_S) != 0)
@@ -143,8 +144,8 @@ typedef struct {
   key_board_status_e status;
   key_board_status_e last_status;
 
-  int16_t cnt;
-  int16_t cnt_max;
+  int16_t cnt;      // 已按住时长(ms)：rc_keyboard_update() 每 1ms 累加一次
+  int16_t cnt_max;  // 长按阈值(ms)：见 KEY_*_CNT_MAX，由 rc_keyboard_cnt_max_set() 写入
 } key_board_info_t;
 
 typedef struct {
