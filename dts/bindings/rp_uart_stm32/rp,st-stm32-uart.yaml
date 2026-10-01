@@ -1,0 +1,8 @@
+# Copyright (c) 2026 RobotPilots-SZU
+# SPDX-License-Identifier: Apache-2.0
+
+description: STM32 UART
+
+compatible: "rp,st-stm32-uart"
+
+include: st,stm32-uart-base.yaml
