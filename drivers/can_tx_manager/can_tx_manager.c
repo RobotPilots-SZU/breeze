@@ -53,6 +53,8 @@ typedef struct rp_can_tx_data
     uint8_t frame_num;                          /* number of active frames */
 } rp_can_tx_data_t;
 
+static void can_tx_mgr_tx_cb(const struct device *dev, int error, void *user_data);
+
 /**
  * @brief Initialize TX manager state and mutex
  *
@@ -314,7 +316,7 @@ static int rp_can_tx_fillbuffer(uint16_t tx_id, struct can_frame *frame, rp_can_
  *
  * @param mgr CAN TX manager device
  * @param timeout send timeout
- * @param callback completion callback
+ * @param callback completion callback, if NULL, an empty callback is used
  * @param tx_filter_id transmit ID (returned by register)
  * @param user_data user data for callback
  * @return int
@@ -366,6 +368,9 @@ int rp_can_tx_manager_send(const struct device *mgr, k_timeout_t timeout, can_tx
      */
     struct can_frame tmp = data->can_items[frame_index].frame;
     k_mutex_unlock(&data->lock);
+    if(callback == NULL) {
+        callback = can_tx_mgr_tx_cb; /* use empty callback if none provided */
+    }
     int send_ret = can_send(cfg->can_dev, &tmp, timeout, callback, user_data);
     return send_ret;
 }
