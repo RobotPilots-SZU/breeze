@@ -1,10 +1,13 @@
 / {
-    remote: remote0 {
+    remote_dt7: dt7 {
         status = "okay";
-        compatible = "rp,remote";
+        compatible = "rp,dt7-remote";
         uart = <&uart5>;
     };
-    aliases {
-        remote0 = &remote;
+
+    remote_vt13: vt13 {
+        status = "okay";
+        compatible = "rp,vt13-remote";
+        uart = <&usart1>;
     };
 };

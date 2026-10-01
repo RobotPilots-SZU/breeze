@@ -3,7 +3,7 @@
 description:
   DJI DT7 Remote Controller (DBUS protocol, normally via a DR16 receiver)
 
-compatible: "rp,remote"
+compatible: "rp,dt7-remote"
 
 properties:
   uart:

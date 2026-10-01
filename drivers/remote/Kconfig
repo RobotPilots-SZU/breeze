@@ -40,7 +40,7 @@ choice REMOTE_PROTOCOL
 
 config REMOTE_PROTOCOL_DT7
     bool "DT7 (DBUS, 100000 8E1, 18-byte frame)"
-    depends on DT_HAS_RP_REMOTE_ENABLED
+    depends on DT_HAS_RP_DT7_REMOTE_ENABLED
 
 config REMOTE_PROTOCOL_VT13
     bool "VT13 / VT03 (921600 8N1, 21-byte frame)"
@@ -54,7 +54,7 @@ config DT7_REMOTE
     help
       DJI DT7 remote controller, DBUS protocol (normally through a DR16
       receiver). Selected by REMOTE_PROTOCOL_DT7; requires a devicetree
-      node with compatible = "rp,remote".
+      node with compatible = "rp,dt7-remote".
 
 config VT13_REMOTE
     bool

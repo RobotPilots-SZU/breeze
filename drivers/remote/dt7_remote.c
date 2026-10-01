@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT rp_remote
+#define DT_DRV_COMPAT rp_dt7_remote
 
 #include <drivers/remote/rc_common.h>
 #include <drivers/remote/remote.h>
@@ -108,9 +108,6 @@ static void rc_data_parse(const uint8_t* rx_buf, rc_sensor_info_t* info) {
   info->tt1 = info->tt2;
   info->tt2 = k_cyc_to_us_floor32(k_cycle_get_32());
   info->ttp = info->tt2 - info->tt1;
-
-  // LOG_INF("Parsed: ch0=%d, ch1=%d, ch2=%d, ch3=%d, s1=%d, s2=%d", info->ch0,
-  //         info->ch1, info->ch2, info->ch3, info->s1, info->s2);
 }
 
 /**

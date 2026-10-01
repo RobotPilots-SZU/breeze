@@ -9,9 +9,13 @@
 
 LOG_MODULE_REGISTER(remote_app, LOG_LEVEL_INF);
 
-#define DR16_REMOTE_NODE DT_ALIAS(remote0)
+#if defined(CONFIG_VT13_REMOTE)
+#define DR16_REMOTE_NODE DT_NODELABEL(remote_vt13)
+#else
+#define DR16_REMOTE_NODE DT_NODELABEL(remote_dt7)
+#endif
 #if !DT_NODE_HAS_STATUS_OKAY(DR16_REMOTE_NODE)
-#error "DT alias 'remote0' 未定义或禁用"
+#error "remote 节点未定义或禁用"
 #endif
 
 static const struct device* remote_dev;
@@ -81,19 +85,26 @@ int main(void) {
     return -1;
   }
   while (1) {
+    printk("\033[2J\033[H");
+    printk("==============================================\n");
+#if defined(CONFIG_VT13_REMOTE)
+    printk("              DJI VT13 RECEIVER               \n");
+#else
+    printk("              DJI DT7 RECEIVER                \n");
+#endif
+    printk("==============================================\n");
+
     if (!sensor->is_online) {
-      printk("\033[2J\033[H");
-      printk("====================================\n");
-      printk("         DJI DR16 RECEIVER          \n");
-      printk("====================================\n");
       printk(" STATUS: OFFLINE\n");
     } else {
-      printk("\033[2J\033[H");
-      printk("==============================================\n");
-      printk("              DJI DR16 RECEIVER               \n");
-      printk("==============================================\n");
       printk(" STATUS: ONLINE   |  PACKETS: %-6u\n", my_app_data.packet_count);
-      printk(" UPTIME: %-8u |  S1: %d  S2: %d\n", my_app_data.last_receive_time, sensor->info->s1, sensor->info->s2);
+#if defined(CONFIG_VT13_REMOTE)
+      printk(" UPTIME: %-8u |  MODE: %d (0=C 1=N 2=S)\n",
+             my_app_data.last_receive_time, sensor->info->mode_switch);
+#else
+      printk(" UPTIME: %-8u |  S1: %d  S2: %d\n",
+             my_app_data.last_receive_time, sensor->info->s1, sensor->info->s2);
+#endif
       printk("----------------------------------------------\n");
       printk(" [ RIGHT STICK ]  |  [ LEFT STICK ] \n");
       printk("  CH0 (X): %-6d |   CH2 (X): %-6d\n", sensor->info->ch0, sensor->info->ch2);
@@ -107,7 +118,11 @@ int main(void) {
       printk(" [ MOUSE AXES ]   |  [ MOUSE BUTTONS ]\n");
       printk("  VX: %-6d      |   LEFT:  %d (Cnt: %d)\n", sensor->info->mouse_vx, sensor->info->mouse_btn_l.value, sensor->info->mouse_btn_l.cnt);
       printk("  VY: %-6d      |   RIGHT: %d (Cnt: %d)\n", sensor->info->mouse_vy, sensor->info->mouse_btn_r.value, sensor->info->mouse_btn_r.cnt);
+#if defined(CONFIG_VT13_REMOTE)
+      printk("  VZ: %-6d      |   MIDDLE: %d (Cnt: %d)\n", sensor->info->mouse_vz, sensor->info->mouse_btn_m.value, sensor->info->mouse_btn_m.cnt);
+#else
       printk("  VZ: %-6d      |\n", sensor->info->mouse_vz);
+#endif
       printk("----------------------------------------------\n");
       printk(" [ KEYBOARD MAP ] Raw Vector: 0x%04X\n", sensor->info->key_v);
       printk("  W:%d S:%d A:%d D:%d | Q:%d E:%d R:%d F:%d | G:%d Z:%d X:%d C:%d\n",
@@ -116,6 +131,11 @@ int main(void) {
              sensor->info->G.value, sensor->info->Z.value, sensor->info->X.value, sensor->info->C.value);
       printk("  V:%d B:%d        | SHIFT:%d CTRL:%d\n",
              sensor->info->V.value, sensor->info->B.value, sensor->info->Shift.value, sensor->info->Ctrl.value);
+#if defined(CONFIG_VT13_REMOTE)
+      printk("  STOP:%d L-BTN:%d R-BTN:%d SHUTTER:%d\n",
+             sensor->info->stop, sensor->info->left_button,
+             sensor->info->right_button, sensor->info->shutter);
+#endif
       printk("==============================================\n");
     }
     // Refresh the screen at 10 Hz
