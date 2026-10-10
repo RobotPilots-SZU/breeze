@@ -1,0 +1,9 @@
+sample:
+  name: Breeze WS2812 sample
+tests:
+  sample.breeze.ws2812:
+    platform_allow:
+      - damiao_mc02
+    tags:
+      - led
+      - led_strip

@@ -1,0 +1,13 @@
+/ {
+    aliases {
+        can-a = &can1;
+        can-b = &can2;
+    };
+
+    can_rx_mgr1: can_rx_mgr1 {
+        compatible = "rp,can-rx-manager";
+        status = "okay";
+        can-bus = <&can1>;
+        label = "can_rx_mgr1";
+    };
+};

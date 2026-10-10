@@ -1,0 +1,10 @@
+
+sample:
+  name: Breeze buzzer sample
+tests:
+  sample.breeze.buzzer:
+    platform_allow:
+      - damiao_mc02
+    tags:
+      - buzzer
+      - pwm

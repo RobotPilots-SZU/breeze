@@ -1,3 +1,0 @@
-source "Kconfig.zephyr"
-source "../../breeze/drivers/remote/Kconfig"
-

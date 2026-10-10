@@ -73,6 +73,6 @@ config REMOTE_INIT_PRIORITY
       Device init priority at POST_KERNEL stage.
 
 # rc_thread.c 的两项线程参数（栈大小 / 优先级）不在这里，它们属于应用侧：
-# 解析线程由应用自己建，配置项跟着实现走，见 samples/boards/dm_mc02/remote/Kconfig。
+# 解析线程由应用自己建，参数直接写死在实现里，见 samples/remote/src/rc_thread.c。
 
 endif # REMOTE

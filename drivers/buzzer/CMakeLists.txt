@@ -2,4 +2,6 @@
 
 zephyr_library()
 
-zephyr_library_sources_ifdef(MLT5020_BUZZER_PWM, MLT5020_pwm.c)
+
+zephyr_library_sources_ifdef(CONFIG_MLT5020_BUZZER_PWM MLT5020_pwm.c)
+
