@@ -12,6 +12,28 @@
 
 建议在Linux环境下进行开发, Windows用户可安装wsl/虚拟机或双系统.
 
+### 维新派(Nix)
+
+创建工作区
+
+```sh
+nix run github:RobotPilots-SZU/breeze#init -- workspace-folder-name
+```
+
+如果你用 `direnv`, 记得允许以自动进入环境.
+
+```bash
+direnv allow
+```
+
+否则需要手动进入开发终端.
+
+```bash
+nix develop
+```
+
+当然, 使用vscode插件 `Nix Environment Selector`也是可以的.
+
 ### 自动挡
 
 1. 使用如下脚本可自动初始化开发环境, 并安装编译工具链.
@@ -60,7 +82,7 @@
 
 ## 文件结构
 
-如下所示为一个breeze工作区的文件目录结构:
+如下所示为一个 Breeze 工作区的目录结构:
 
 ```
 breeze-workspace            工作区，用于隔离开发环境 (如Python的venv)
@@ -72,7 +94,4 @@ breeze-workspace            工作区，用于隔离开发环境 (如Python的ve
     |       | - modules     Zephyr子模块仓库存放目录
     |
     |-  breeze-app          APP目录，用户进行开发时存放相关仓库的位置
-    |       | - app1        用户app1仓库
-    |       | - app2        用户app2仓库
-    |       | - ...         更多用户app仓库
 ```
