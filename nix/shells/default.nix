@@ -7,9 +7,13 @@
   {
     devShells =
     let
+      sdk = (zephyrPackages.sdk.override {
+        targets = [
+          "arm-zephyr-eabi"
+        ];
+      });
       workspace = pkgs.mkShell {
         name = "breeze-dev-workspace";
-
         packages = with pkgs; [
           cmake
           ninja
@@ -27,11 +31,7 @@
           python3
           SDL2
         ] ++ ( with zephyrPackages; [
-          (sdk.override {
-            targets = [
-              "arm-zephyr-eabi"
-            ];
-          })
+          sdk
           (pythonEnv.override {
             packageOverrides = _self: super: {
               tree-sitter-cmake = super.tree-sitter-grammars.tree-sitter-cmake;
@@ -40,6 +40,9 @@
           hosttools
           clang-tools
         ]);
+
+        CLANGD_FLAGS="--query-driver=${sdk}/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-g++";
+
       };
     in {
       inherit workspace;
