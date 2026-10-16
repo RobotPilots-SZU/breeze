@@ -24,7 +24,6 @@
           wget
           file
           gnumake
-          gcc
           gdb
           openocd
           git
