@@ -5,3 +5,10 @@
 # build output dirs
 build
 build-*
+
+# Nix & direnv
+result
+.direnv
+
+# Aider chat
+.aider*
