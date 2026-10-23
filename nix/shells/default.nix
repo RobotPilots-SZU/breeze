@@ -33,6 +33,7 @@
           };
         })
         hosttools
+      ]) ++ (with pkgs.llvmPackages_latest; [
         clang-tools
       ]);
 
