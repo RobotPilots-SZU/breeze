@@ -16,6 +16,7 @@
 #include <zephyr/sys/slist.h>
 
 int motor_dm_update_heartbeat_status(const struct device *dev);
+static int motor_dm_txbuff_init(const struct device *dev);
 
 /**
  * @brief 心跳自动检测工作处理函数
@@ -207,6 +208,8 @@ static int motor_dm_can_register_motor(const struct device *dev)
 	}
 #endif
 
+	(void)motor_dm_txbuff_init(dev);
+
 	// can 过滤器
 	struct can_filter filter = {
 		.id = cfg->rx_id & CAN_STD_ID_MASK,
@@ -245,7 +248,6 @@ static int motor_dm_can_register_motor(const struct device *dev)
 #endif
 
 	data->registered = true;
-	data->motor_data.tx_data[0] = 0;
 	data->motor_data.interface_ptr = (void *)cfg;
 	data->motor_data.rx_data.valid_mask = 0U;
 	data->motor_data.heartbeat_status.is_alive = false;
@@ -384,6 +386,41 @@ const motor_driver_api_t motor_dm_can_api = {
     .dm_api = &motor_dm_can_special_api,
 };
 
+/**
+ * @brief check if the control mdoe is MIT mode, if so, the txbuff need to be mapped
+ *
+ * @param dev
+ * @return int
+ */
+static int motor_dm_txbuff_init(const struct device *dev)
+{
+	motor_dm_data_t *data = dev->data;
+	const motor_dm_cfg_t *cfg = dev->config;
+	if (data == NULL || cfg == NULL) {
+		LOG_ERR("[dm_motor_err] txbuff init Invalid arguments");
+		return -EINVAL;
+	}
+	k_spinlock_key_t key = k_spin_lock(&data->lock);
+	if (cfg->control_mode == 1)		// MIT 模式下发送数组需要映射
+	{
+		data->motor_data.tx_data[0] = (float_to_uint(0, cfg->param_limit.pos_min, cfg->param_limit.pos_max, 16) >> 8) & 0xFF;
+    	data->motor_data.tx_data[1] = float_to_uint(0, cfg->param_limit.pos_min, cfg->param_limit.pos_max, 16) & 0xFF;
+    	data->motor_data.tx_data[2] = (float_to_uint(0, cfg->param_limit.vel_min, cfg->param_limit.vel_max, 12) >> 4) & 0xFF;
+    	data->motor_data.tx_data[3] = ((float_to_uint(0, cfg->param_limit.vel_min, cfg->param_limit.vel_max, 12) & 0x0F) << 4)
+                                	| ((float_to_uint(0, cfg->param_limit.kp_min, cfg->param_limit.kp_max, 12) >> 8) & 0x0F);
+    	data->motor_data.tx_data[4] = float_to_uint(0, cfg->param_limit.kp_min, cfg->param_limit.kp_max, 12) & 0xFF;
+    	data->motor_data.tx_data[5] = (float_to_uint(0, cfg->param_limit.kd_min, cfg->param_limit.kd_max, 12) >> 4) & 0xFF;
+    	data->motor_data.tx_data[6] = ((float_to_uint(0, cfg->param_limit.kd_min, cfg->param_limit.kd_max, 12) & 0x0F) << 4)
+                                	| ((float_to_uint(0, cfg->param_limit.tq_min, cfg->param_limit.tq_max, 12) >> 8) & 0x0F);
+    	data->motor_data.tx_data[7] = float_to_uint(0, cfg->param_limit.tq_min, cfg->param_limit.tq_max, 12) & 0xFF;
+	}
+	else	// 非 MIT 模式清零发送缓冲
+	{
+		memset(data->motor_data.tx_data, 0, sizeof(data->motor_data.tx_data));
+	}
+	k_spin_unlock(&data->lock, key);
+	return 0;
+}
 
 /**
  * @brief dm电机实例的初始化
@@ -426,6 +463,11 @@ int motor_dm_can_init(const struct device *dev)
 	data->motor_data.rx_data.valid_mask = 0U;
 	data->motor_data.heartbeat_status.is_alive = false;
 	data->motor_data.heartbeat_status.heartbeat_tick = 0;
+	start_ret = motor_dm_txbuff_init(dev);
+	if (start_ret < 0) {
+		LOG_ERR("[dm_motor_err] Failed to initialize tx buffer, error: %d", start_ret);
+		return start_ret;
+	}
 
 #if defined(CONFIG_BLDCM_HEARTBEAT_AUTOCHECK)
 	data->dev_self = dev;
