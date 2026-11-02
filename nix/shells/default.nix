@@ -8,20 +8,21 @@
         "arm-zephyr-eabi"
       ];
     };
-    gcc_multi_wrapped = pkgs.symlinkJoin {
-      name = "gcc-multi-locale-c";
-      paths = [ pkgs.gcc_multi ];
+    llvm = pkgs.llvmPackages_latest;
+    clang_tools_wrapped = pkgs.symlinkJoin {
+      name = "clang-tools-wrapped";
+      paths = [ llvm.clang-tools ];
 
       nativeBuildInputs = [ pkgs.makeWrapper ];
 
       postBuild = ''
-        for exe in "$out"/bin/*; do
-          if [ -f "$exe" ] && [ -x "$exe" ]; then
-            wrapProgram "$exe" \
-              --set LANG C \
-              --set LC_ALL C
-          fi
-        done
+        rm "$out/bin/clangd"
+
+        makeWrapper \
+          "${llvm.clang-tools}/bin/clangd" \
+          "$out/bin/clangd" \
+          --set LANG C \
+          --set LC_ALL C
       '';
     };
     shell-base = pkgs.mkShell {
@@ -49,21 +50,21 @@
           };
         })
         hosttools
-      ]) ++ (with pkgs.llvmPackages_latest; [
-        clang-tools
-      ]);
+      ]) ++ [
+        clang_tools_wrapped
+      ];
     };
     shell-native =
       let
         env = {
-          CLANGD_FLAGS="--query-driver=${gcc_multi_wrapped}/bin/g++";
+          CLANGD_FLAGS="--query-driver=${pkgs.gcc_multi}/bin/g++";
           NIX_LDFLAGS = " -L${pkgs.pkgsi686Linux.gcc.cc.lib}/lib -L${pkgs.pkgsi686Linux.gcc.cc.libgcc}/lib";
         };
       in pkgs.mkShell ({
         inputsFrom = [ shell-base ];
         nativeBuildInputs = [
           pkgs.pkgsi686Linux.glibc
-          gcc_multi_wrapped
+          pkgs.gcc_multi
         ];
         passthru.env = env;
       } // env);
