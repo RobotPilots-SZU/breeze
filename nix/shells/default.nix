@@ -8,24 +8,7 @@
         "arm-zephyr-eabi"
       ];
     };
-    llvm = pkgs.llvmPackages_latest;
-    clang_tools_wrapped = pkgs.symlinkJoin {
-      name = "clang-tools-wrapped";
-      paths = [ llvm.clang-tools ];
-
-      nativeBuildInputs = [ pkgs.makeWrapper ];
-
-      postBuild = ''
-        rm "$out/bin/clangd"
-
-        makeWrapper \
-          "${llvm.clang-tools}/bin/clangd" \
-          "$out/bin/clangd" \
-          --set LANG C \
-          --set LC_ALL C
-      '';
-    };
-    shell-base = pkgs.mkShell {
+    breeze-shell = pkgs.mkShell {
       name = "breeze-shell";
       packages = with pkgs; [
         cmake
@@ -50,39 +33,17 @@
           };
         })
         hosttools
-      ]) ++ [
-        clang_tools_wrapped
-      ];
+        clang-tools
+      ]);
+
+      shellHook = ''
+        export CLANGD_FLAGS="--query-driver=${sdk}/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-g++"
+      '';
     };
-    shell-native =
-      let
-        env = {
-          CLANGD_FLAGS="--query-driver=${pkgs.gcc_multi}/bin/g++";
-          NIX_LDFLAGS = " -L${pkgs.pkgsi686Linux.gcc.cc.lib}/lib -L${pkgs.pkgsi686Linux.gcc.cc.libgcc}/lib";
-        };
-      in pkgs.mkShell ({
-        inputsFrom = [ shell-base ];
-        nativeBuildInputs = [
-          pkgs.pkgsi686Linux.glibc
-          pkgs.gcc_multi
-        ];
-        passthru.env = env;
-      } // env);
-    shell-arm =
-      let
-        env = {
-          CLANGD_FLAGS="--query-driver=${sdk}/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-g++";
-        };
-      in pkgs.mkShell ({
-        inputsFrom = [ shell-base ];
-        passthru.env = env;
-      } // env);
-    in {
+  in {
     devShells = {
-      base = shell-base;
-      arm = shell-arm;
-      native = shell-native;
-      default = shell-arm;
+      development = breeze-shell;
+      default = breeze-shell;
     };
   };
 }
