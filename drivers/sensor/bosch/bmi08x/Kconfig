@@ -1,0 +1,12 @@
+# Copyright (c) 2026 RobotPilots
+
+# SPDX-License-Identifier: Apache-2.0
+
+config RP_BMI08X_STREAM
+    bool "Use custom BMI08x stream files"
+    default y
+    depends on BMI08X
+    depends on BMI08X_ACCEL_STREAM || BMI08X_GYRO_STREAM
+    help
+      Replace official bmi08x_accel_stream.c and bmi08x_gyro_stream.c
+      with custom versions from this module.
